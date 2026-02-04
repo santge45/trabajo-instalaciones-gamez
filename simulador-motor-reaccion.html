@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Motor a Reacción - Santiago Domínguez UCA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-decoration: none;
+            color: #94a3b8;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #e2e8f0;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .back-button::before {
+            content: '← ';
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .author {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        #engineCanvas {
+            width: 100%;
+            height: 550px;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: block;
+        }
+
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .engine-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .engine-btn {
+            padding: 0.75rem;
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 6px;
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .engine-btn:hover {
+            background: rgba(100, 116, 139, 0.4);
+            border-color: rgba(148, 163, 184, 0.5);
+        }
+
+        .engine-btn.active {
+            background: rgba(100, 116, 139, 0.5);
+            border-color: #94a3b8;
+            color: #f8fafc;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        .control-value {
+            font-family: 'Courier New', monospace;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #64748b;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #94a3b8;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #64748b;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-btn {
+            width: 28px;
+            height: 28px;
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 4px;
+            color: #94a3b8;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .slider-btn:hover {
+            background: rgba(100, 116, 139, 0.4);
+            border-color: rgba(148, 163, 184, 0.5);
+        }
+
+        .output-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .output-item {
+            background: rgba(100, 116, 139, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .output-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .output-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.3rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .output-unit {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-left: 0.2rem;
+        }
+
+        .info-panel {
+            grid-column: 1 / -1;
+            background: rgba(30, 41, 59, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 1rem;
+        }
+
+        .info-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .info-text {
+            color: #cbd5e1;
+            line-height: 1.7;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .equation {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 0.75rem 0;
+            border-left: 3px solid #64748b;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+
+        .equation-title {
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        }
+
+        @media (max-width: 1400px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            #engineCanvas {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            #engineCanvas {
+                height: 400px;
+            }
+            
+            .output-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">Volver al Inicio</a>
+
+    <div class="container">
+        <header>
+            <h1>Simulador de Motor a Reacción</h1>
+            <div class="subtitle">Ciclo Termodinámico Brayton</div>
+            <div class="author">Santiago Domínguez · Universidad de Cádiz</div>
+        </header>
+
+        <div class="main-layout">
+            <div class="card">
+                <h2 class="card-title">Diagrama del Motor</h2>
+                <canvas id="engineCanvas"></canvas>
+            </div>
+
+            <div class="controls-panel">
+                <div class="card">
+                    <h2 class="card-title">Tipo de Motor</h2>
+                    
+                    <div class="engine-selector">
+                        <button class="engine-btn active" data-engine="turbojet">Turborreactor</button>
+                        <button class="engine-btn" data-engine="turbofan">Turbofan</button>
+                        <button class="engine-btn" data-engine="afterburner">Con Postcombustión</button>
+                        <button class="engine-btn" data-engine="ramjet">Estatorreactor</button>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Altitud</span>
+                            <span class="control-value" id="altitudeValue">0 m</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" id="altitudeDown">−</button>
+                            <input type="range" id="altitudeSlider" min="0" max="12000" step="100" value="0">
+                            <button class="slider-btn" id="altitudeUp">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Velocidad de Vuelo</span>
+                            <span class="control-value" id="velocityValue">0 m/s</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" id="velocityDown">−</button>
+                            <input type="range" id="velocitySlider" min="0" max="600" step="10" value="0">
+                            <button class="slider-btn" id="velocityUp">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Relación de Compresión (π)</span>
+                            <span class="control-value" id="compressionValue">8.0</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" id="compressionDown">−</button>
+                            <input type="range" id="compressionSlider" min="2" max="40" step="0.5" value="8">
+                            <button class="slider-btn" id="compressionUp">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Temp. Entrada Turbina (TET)</span>
+                            <span class="control-value" id="tetValue">1500 K</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" id="tetDown">−</button>
+                            <input type="range" id="tetSlider" min="1000" max="2200" step="50" value="1500">
+                            <button class="slider-btn" id="tetUp">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Acelerador (Throttle)</span>
+                            <span class="control-value" id="throttleValue">100%</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" id="throttleDown">−</button>
+                            <input type="range" id="throttleSlider" min="30" max="100" step="1" value="100">
+                            <button class="slider-btn" id="throttleUp">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Resultados de Rendimiento</h2>
+                    <div class="output-grid">
+                        <div class="output-item">
+                            <div class="output-label">Empuje Neto</div>
+                            <div class="output-value" id="thrustValue">0<span class="output-unit">kN</span></div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Consumo Combustible</div>
+                            <div class="output-value" id="fuelValue">0.0<span class="output-unit">kg/s</span></div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Consumo Específico (TSFC)</div>
+                            <div class="output-value" id="tsfcValue">0.0<span class="output-unit">g/kN·s</span></div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Flujo de Aire</div>
+                            <div class="output-value" id="airflowValue">0.0<span class="output-unit">kg/s</span></div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Eficiencia Térmica</div>
+                            <div class="output-value" id="efficiencyValue">0.0<span class="output-unit">%</span></div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Relación Empuje/Peso</div>
+                            <div class="output-value" id="twrValue">0.0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h3 class="info-title">🔥 Cómo Funciona un Motor a Reacción</h3>
+                
+                <p class="info-text">
+                    Un motor a reacción funciona según el <strong>Ciclo Brayton</strong>, 
+                    que consta de cuatro procesos termodinámicos principales:
+                </p>
+
+                <div class="equation">
+                    <div class="equation-title">1. Compresión Adiabática (Compresor)</div>
+                    P₂/P₁ = π (relación de compresión)<br>
+                    T₂/T₁ = π^((γ-1)/γ) / η<sub>c</sub><br>
+                    Trabajo: W<sub>c</sub> = ṁ·c<sub>p</sub>·(T₂ - T₁)
+                </div>
+
+                <div class="equation">
+                    <div class="equation-title">2. Combustión Isobárica (Cámara de Combustión)</div>
+                    P₃ = P₂ (presión constante)<br>
+                    Q<sub>in</sub> = ṁ<sub>f</sub>·LHV = ṁ·c<sub>p</sub>·(T₃ - T₂)<br>
+                    Relación combustible/aire: f = ṁ<sub>f</sub>/ṁ<sub>a</sub>
+                </div>
+
+                <div class="equation">
+                    <div class="equation-title">3. Expansión Adiabática (Turbina)</div>
+                    T₄/T₃ = (P₄/P₃)^((γ-1)/γ)·η<sub>t</sub><br>
+                    Trabajo: W<sub>t</sub> = ṁ·c<sub>p</sub>·(T₃ - T₄)<br>
+                    Condición: W<sub>t</sub> = W<sub>c</sub> (turbina impulsa compresor)
+                </div>
+
+                <div class="equation">
+                    <div class="equation-title">4. Expansión en la Tobera (Propulsión)</div>
+                    V<sub>exit</sub> = √(2·c<sub>p</sub>·(T₄ - T<sub>amb</sub>))<br>
+                    Empuje: F = ṁ·(V<sub>exit</sub> - V<sub>flight</sub>) + A<sub>e</sub>·(P<sub>e</sub> - P<sub>amb</sub>)
+                </div>
+
+                <div class="equation">
+                    <div class="equation-title">5. Eficiencia Térmica y TSFC</div>
+                    η<sub>térmica</sub> = 1 - (T₁/T₃)·(π^((γ-1)/γ))<br>
+                    TSFC = ṁ<sub>f</sub>/F (consumo específico de combustible)
+                </div>
+
+                <p class="info-text">
+                    <strong>Parámetros clave:</strong>
+                </p>
+                <ul style="color: #cbd5e1; line-height: 1.7; margin-left: 1.5rem; font-size: 0.9rem;">
+                    <li><strong>γ (gamma)</strong> = 1.4 para aire (relación de calores específicos)</li>
+                    <li><strong>c<sub>p</sub></strong> = 1005 J/(kg·K) para aire</li>
+                    <li><strong>LHV</strong> = 43 MJ/kg para queroseno (poder calorífico)</li>
+                    <li><strong>η<sub>c</sub></strong> = 0.85 eficiencia del compresor</li>
+                    <li><strong>η<sub>t</sub></strong> = 0.90 eficiencia de la turbina</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =================================================================
+           CONSTANTES TERMODINÁMICAS Y PROPIEDADES DEL AIRE
+           ================================================================= */
+        
+        const GAMMA = 1.4;              // Relación de calores específicos del aire
+        const CP_AIR = 1005;            // J/(kg·K) - Calor específico a presión constante
+        const R_AIR = 287;              // J/(kg·K) - Constante del gas para aire
+        const LHV_FUEL = 43e6;          // J/kg - Poder calorífico inferior del queroseno
+        const ETA_COMPRESSOR = 0.85;    // Eficiencia del compresor
+        const ETA_TURBINE = 0.90;       // Eficiencia de la turbina
+        const ETA_BURNER = 0.98;        // Eficiencia de la cámara de combustión
+        const INLET_AREA = 0.5;         // m² - Área de entrada del motor
+        const ENGINE_WEIGHT = 2000;     // kg - Peso estimado del motor
+
+        /* =================================================================
+           SETUP DEL CANVAS
+           ================================================================= */
+        
+        const canvas = document.getElementById('engineCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        /* =================================================================
+           PARÁMETROS DEL MOTOR
+           ================================================================= */
+        
+        let currentEngine = 'turbojet';
+        let params = {
+            altitude: 0,        // metros
+            velocity: 0,        // m/s
+            compression: 8.0,   // relación de compresión
+            tet: 1500,          // K - Turbine Entry Temperature
+            throttle: 100       // %
+        };
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            if (typeof updateUI === 'function') {
+                updateUI();
+            }
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+
+        /* =================================================================
+           REFERENCIAS DOM
+           ================================================================= */
+        
+        const sliders = {
+            altitude: document.getElementById('altitudeSlider'),
+            velocity: document.getElementById('velocitySlider'),
+            compression: document.getElementById('compressionSlider'),
+            tet: document.getElementById('tetSlider'),
+            throttle: document.getElementById('throttleSlider')
+        };
+
+        const valores = {
+            altitude: document.getElementById('altitudeValue'),
+            velocity: document.getElementById('velocityValue'),
+            compression: document.getElementById('compressionValue'),
+            tet: document.getElementById('tetValue'),
+            throttle: document.getElementById('throttleValue')
+        };
+
+        const outputs = {
+            thrust: document.getElementById('thrustValue'),
+            fuel: document.getElementById('fuelValue'),
+            tsfc: document.getElementById('tsfcValue'),
+            airflow: document.getElementById('airflowValue'),
+            efficiency: document.getElementById('efficiencyValue'),
+            twr: document.getElementById('twrValue')
+        };
+
+        /* =================================================================
+           FUNCIONES DE ATMÓSFERA ESTÁNDAR
+           Modelo ISA (International Standard Atmosphere)
+           ================================================================= */
+        
+        function getAtmosphereProperties(altitude) {
+            // Condiciones al nivel del mar
+            const T0 = 288.15;      // K
+            const P0 = 101325;      // Pa
+            const rho0 = 1.225;     // kg/m³
+            
+            // Gradiente térmico troposfera: -6.5 K/km
+            const lapse_rate = -0.0065; // K/m
+            
+            let T, P, rho;
+            
+            if (altitude <= 11000) {
+                // Troposfera (0-11 km)
+                T = T0 + lapse_rate * altitude;
+                P = P0 * Math.pow(T / T0, -9.81 / (lapse_rate * R_AIR));
+                rho = P / (R_AIR * T);
+            } else {
+                // Estratosfera baja (11-20 km) - temperatura constante
+                const T11 = 216.65;     // K a 11 km
+                const P11 = 22632;      // Pa a 11 km
+                T = T11;
+                P = P11 * Math.exp(-9.81 * (altitude - 11000) / (R_AIR * T11));
+                rho = P / (R_AIR * T);
+            }
+            
+            return { T, P, rho };
+        }
+
+        /* =================================================================
+           CÁLCULOS DEL CICLO BRAYTON
+           Implementación del ciclo termodinámico del motor
+           ================================================================= */
+        
+        function calculateEnginePerformance() {
+            // 1. Condiciones de entrada (estación 0)
+            const atm = getAtmosphereProperties(params.altitude);
+            const T0 = atm.T;
+            const P0 = atm.P;
+            const rho0 = atm.rho;
+            
+            // 2. Condiciones después de la entrada (estación 1)
+            // Recuperación de presión de entrada (inlet recovery)
+            const M0 = params.velocity / Math.sqrt(GAMMA * R_AIR * T0); // Número de Mach
+            let ram_recovery = 1.0;
+            if (M0 > 1.0) {
+                // Pérdidas supersónicas
+                ram_recovery = 1.0 - 0.075 * Math.pow(M0 - 1.0, 1.35);
+            }
+            
+            const T1 = T0 * (1 + (GAMMA - 1) / 2 * M0 * M0);  // Temperatura de remanso
+            const P1 = P0 * Math.pow(1 + (GAMMA - 1) / 2 * M0 * M0, GAMMA / (GAMMA - 1)) * ram_recovery;
+            
+            // 3. Flujo másico de aire
+            const V0 = params.velocity;
+            const airflow = rho0 * V0 * INLET_AREA; // kg/s
+            
+            // 4. Compresión (estación 1 → 2)
+            const pi_c = params.compression;
+            const T2_ideal = T1 * Math.pow(pi_c, (GAMMA - 1) / GAMMA);
+            const T2 = T1 + (T2_ideal - T1) / ETA_COMPRESSOR;
+            const P2 = P1 * pi_c;
+            const W_compressor = airflow * CP_AIR * (T2 - T1); // Watts
+            
+            // 5. Combustión (estación 2 → 3)
+            const T3 = params.tet * (params.throttle / 100);
+            const P3 = P2 * 0.95; // Pérdida de presión en la cámara de combustión (~5%)
+            
+            // Relación combustible/aire
+            const f = (CP_AIR * (T3 - T2)) / (ETA_BURNER * LHV_FUEL - CP_AIR * T3);
+            const fuel_flow = airflow * f; // kg/s
+            
+            // 6. Turbina (estación 3 → 4)
+            // La turbina debe generar suficiente trabajo para impulsar el compresor
+            const W_turbine_required = W_compressor;
+            const deltaT_turbine = W_turbine_required / ((airflow + fuel_flow) * CP_AIR);
+            const T4 = T3 - deltaT_turbine;
+            const pi_t = Math.pow(1 - deltaT_turbine / (T3 * ETA_TURBINE), GAMMA / (GAMMA - 1));
+            const P4 = P3 * pi_t;
+            
+            // 7. Tobera (estación 4 → 5)
+            // Expansión hasta presión ambiente
+            const P5 = P0;
+            const T5_ideal = T4 * Math.pow(P5 / P4, (GAMMA - 1) / GAMMA);
+            const T5 = T4 - ETA_TURBINE * (T4 - T5_ideal);
+            
+            // Velocidad de salida
+            const V_exit = Math.sqrt(2 * CP_AIR * (T4 - T5));
+            
+            // 8. EMPUJE
+            // Ecuación de impulso: F = ṁ(Ve - V0) + Ae(Pe - P0)
+            const thrust_momentum = (airflow + fuel_flow) * (V_exit - V0);
+            // Simplificación: asumimos Pe ≈ P0 (tobera adaptada)
+            const thrust = thrust_momentum / 1000; // kN
+            
+            // 9. EFICIENCIAS Y CONSUMOS
+            // TSFC (Thrust Specific Fuel Consumption)
+            const tsfc = (fuel_flow / thrust) * 1000; // g/(kN·s)
+            
+            // Eficiencia térmica
+            const Q_in = fuel_flow * LHV_FUEL;
+            const kinetic_power_out = 0.5 * (airflow + fuel_flow) * (V_exit * V_exit - V0 * V0);
+            const thermal_efficiency = (kinetic_power_out / Q_in) * 100;
+            
+            // Relación empuje/peso
+            const twr = (thrust * 1000) / (ENGINE_WEIGHT * 9.81);
+            
+            return {
+                thrust: thrust,
+                fuel_flow: fuel_flow,
+                tsfc: tsfc,
+                airflow: airflow,
+                thermal_efficiency: thermal_efficiency,
+                twr: twr,
+                stations: {
+                    T: [T0, T1, T2, T3, T4, T5],
+                    P: [P0, P1, P2, P3, P4, P5]
+                }
+            };
+        }
+
+        /* =================================================================
+           DIBUJO DEL MOTOR
+           Representación esquemática del motor
+           ================================================================= */
+        
+        function drawEngine() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // Fondo
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Rejilla
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.1)';
+            ctx.lineWidth = 1;
+            for (let x = 0; x < width; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < height; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+            
+            const centerY = height / 2;
+            const startX = 50;
+            const scale = 1.2;
+            
+            // Calcular datos termodinámicos
+            const results = calculateEnginePerformance();
+            const stations = results.stations;
+            
+            // ENTRADA
+            drawSection('Entrada', startX, centerY, 100 * scale, 'Aire ambiente', stations.T[0], stations.P[0], '#3b82f6');
+            
+            // COMPRESOR
+            drawSection('Compresor', startX + 120 * scale, centerY, 120 * scale, `π = ${params.compression.toFixed(1)}`, stations.T[2], stations.P[2], '#10b981');
+            
+            // CÁMARA DE COMBUSTIÓN
+            drawSection('Combustión', startX + 260 * scale, centerY, 100 * scale, 'Quema combustible', stations.T[3], stations.P[3], '#ef4444');
+            
+            // TURBINA
+            drawSection('Turbina', startX + 380 * scale, centerY, 120 * scale, 'Impulsa compresor', stations.T[4], stations.P[4], '#fbbf24');
+            
+            // TOBERA
+            drawSection('Tobera', startX + 520 * scale, centerY, 100 * scale, 'Expansión', stations.T[5], stations.P[5], '#8b5cf6');
+            
+            // Líneas de flujo
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            
+            const y1 = centerY - 60;
+            const y2 = centerY + 60;
+            
+            ctx.beginPath();
+            ctx.moveTo(startX, y1);
+            ctx.lineTo(startX + 650 * scale, y1);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(startX, y2);
+            ctx.lineTo(startX + 650 * scale, y2);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            
+            // Flecha de flujo
+            ctx.strokeStyle = '#f8fafc';
+            ctx.fillStyle = '#f8fafc';
+            ctx.lineWidth = 3;
+            const arrowY = centerY - 100;
+            ctx.beginPath();
+            ctx.moveTo(startX + 20, arrowY);
+            ctx.lineTo(startX + 600 * scale, arrowY);
+            ctx.stroke();
+            
+            // Punta de flecha
+            ctx.beginPath();
+            ctx.moveTo(startX + 600 * scale, arrowY);
+            ctx.lineTo(startX + 590 * scale, arrowY - 8);
+            ctx.lineTo(startX + 590 * scale, arrowY + 8);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = '14px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText('Dirección del flujo', width / 2, arrowY - 15);
+        }
+
+        function drawSection(label, x, y, width, info, temp, pressure, color) {
+            const height = 120;
+            
+            // Caja
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.2)';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.fillRect(x, y - height/2, width, height);
+            ctx.strokeRect(x, y - height/2, width, height);
+            
+            // Etiqueta
+            ctx.fillStyle = color;
+            ctx.font = 'bold 14px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x + width/2, y - height/2 - 10);
+            
+            // Info
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = '11px system-ui';
+            ctx.fillText(info, x + width/2, y - 15);
+            
+            // Temperatura
+            ctx.fillText(`T = ${temp.toFixed(0)} K`, x + width/2, y + 5);
+            
+            // Presión
+            ctx.fillText(`P = ${(pressure/1000).toFixed(1)} kPa`, x + width/2, y + 25);
+        }
+
+        /* =================================================================
+           ACTUALIZACIÓN DE LA INTERFAZ
+           ================================================================= */
+        
+        function updateUI() {
+            valores.altitude.textContent = `${params.altitude} m`;
+            valores.velocity.textContent = `${params.velocity} m/s`;
+            valores.compression.textContent = params.compression.toFixed(1);
+            valores.tet.textContent = `${params.tet} K`;
+            valores.throttle.textContent = `${params.throttle}%`;
+            
+            const results = calculateEnginePerformance();
+            
+            outputs.thrust.innerHTML = `${results.thrust.toFixed(1)}<span class="output-unit">kN</span>`;
+            outputs.fuel.innerHTML = `${results.fuel_flow.toFixed(2)}<span class="output-unit">kg/s</span>`;
+            outputs.tsfc.innerHTML = `${results.tsfc.toFixed(1)}<span class="output-unit">g/kN·s</span>`;
+            outputs.airflow.innerHTML = `${results.airflow.toFixed(1)}<span class="output-unit">kg/s</span>`;
+            outputs.efficiency.innerHTML = `${results.thermal_efficiency.toFixed(1)}<span class="output-unit">%</span>`;
+            outputs.twr.textContent = results.twr.toFixed(2);
+            
+            drawEngine();
+        }
+
+        /* =================================================================
+           EVENT LISTENERS
+           ================================================================= */
+        
+        // Sliders
+        sliders.altitude.addEventListener('input', (e) => {
+            params.altitude = parseFloat(e.target.value);
+            updateUI();
+        });
+
+        sliders.velocity.addEventListener('input', (e) => {
+            params.velocity = parseFloat(e.target.value);
+            updateUI();
+        });
+
+        sliders.compression.addEventListener('input', (e) => {
+            params.compression = parseFloat(e.target.value);
+            updateUI();
+        });
+
+        sliders.tet.addEventListener('input', (e) => {
+            params.tet = parseFloat(e.target.value);
+            updateUI();
+        });
+
+        sliders.throttle.addEventListener('input', (e) => {
+            params.throttle = parseFloat(e.target.value);
+            updateUI();
+        });
+
+        // Botones +/-
+        const sliderButtons = {
+            altitude: { down: 'altitudeDown', up: 'altitudeUp', slider: sliders.altitude },
+            velocity: { down: 'velocityDown', up: 'velocityUp', slider: sliders.velocity },
+            compression: { down: 'compressionDown', up: 'compressionUp', slider: sliders.compression },
+            tet: { down: 'tetDown', up: 'tetUp', slider: sliders.tet },
+            throttle: { down: 'throttleDown', up: 'throttleUp', slider: sliders.throttle }
+        };
+
+        Object.entries(sliderButtons).forEach(([param, buttons]) => {
+            document.getElementById(buttons.down).addEventListener('click', () => {
+                const slider = buttons.slider;
+                const step = parseFloat(slider.step);
+                const newValue = Math.max(parseFloat(slider.min), parseFloat(slider.value) - step);
+                slider.value = newValue;
+                slider.dispatchEvent(new Event('input'));
+            });
+            
+            document.getElementById(buttons.up).addEventListener('click', () => {
+                const slider = buttons.slider;
+                const step = parseFloat(slider.step);
+                const newValue = Math.min(parseFloat(slider.max), parseFloat(slider.value) + step);
+                slider.value = newValue;
+                slider.dispatchEvent(new Event('input'));
+            });
+        });
+
+        // Selector de motor
+        document.querySelectorAll('.engine-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.engine-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentEngine = e.target.dataset.engine;
+                updateUI();
+            });
+        });
+
+        // Inicialización
+        resizeCanvas();
+        updateUI();
+    </script>
+</body>
+</html>

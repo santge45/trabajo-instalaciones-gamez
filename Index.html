@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulaciones Interactivas - Santiago Domínguez UCA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #424c75 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #4a5568;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .author {
+            color: #718096;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+
+        .intro {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-left: 5px solid #667eea;
+        }
+
+        .intro h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .intro p {
+            color: #4a5568;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            color: white;
+            font-size: 2em;
+            margin: 40px 0 20px 0;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .simulations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .simulation-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .simulation-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .simulation-card h3 {
+            color: #2d3748;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            font-size: 1.8em;
+        }
+
+        .simulation-card p {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .equation {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            color: #2d3748;
+            border-left: 3px solid #667eea;
+        }
+
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .feature-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .feature-tag.aero {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+        }
+
+        .feature-tag.hidra {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.6);
+        }
+
+        .btn-aero {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            box-shadow: 0 5px 15px rgba(58, 123, 213, 0.4);
+        }
+
+        .btn-aero:hover {
+            box-shadow: 0 8px 25px rgba(58, 123, 213, 0.6);
+        }
+
+        .btn-hidra {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        }
+
+        .btn-hidra:hover {
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.6);
+        }
+
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        footer h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        footer p {
+            color: #4a5568;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .contact-info {
+            margin-top: 20px;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.65em;
+            font-weight: bold;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .badge.new {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+        }
+
+        .badge.nasa {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .simulations-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .subtitle {
+                font-size: 1em;
+            }
+        }
+
+        .github-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #24292e;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+            font-weight: bold;
+        }
+
+        .github-link:hover {
+            transform: scale(1.1);
+        }
+
+        .watermark-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('logo_UCA.png');
+            background-repeat: repeat;
+            background-size: 300px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header-logo {
+            max-height: 80px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="watermark-pattern"></div>
+    <div class="container">
+        <header>
+            <img src="logo_UCA.png" alt="Logo UCA" class="header-logo">
+            <h1>SIMULACIONES INTERACTIVAS</h1>
+            <p class="subtitle">INSTALACIONES Y MÁQUINAS HIDRÁULICAS Y TÉRMICAS</p>
+            <p class="subtitle" style="font-size: 1.1em; margin-top: 5px;">1º del Máster en Ingeniería Industrial</p>
+            <p class="author">
+                <strong>Santiago Domínguez</strong><br>
+                Universidad de Cádiz (UCA)
+            </p>
+        </header>
+
+        <div class="intro">
+            <h2>📚 Sobre este proyecto</h2>
+            <p>
+                Esta colección de simulaciones interactivas explora soluciones analíticas y numéricas
+                de las <strong>ecuaciones de Navier-Stokes</strong> para diferentes configuraciones de flujo,
+                junto con simulaciones aerodinámicas basadas en el teorema de <strong>Kutta-Joukowski</strong>.
+            </p>
+            <p>
+                <strong>Este trabajo corresponde a la parte de ANTONIO J. GÁMEZ.</strong>
+            </p>
+            <p>
+                Cada simulación permite ajustar parámetros físicos en tiempo real y comparar resultados
+                teóricos con aproximaciones numéricas, proporcionando una experiencia educativa interactiva.
+            </p>
+        </div>
+
+        <h2 class="section-title">🌊 Ecuaciones de Navier-Stokes</h2>
+
+        <div class="simulations-grid">
+            <!-- Simulación 1: Placa en movimiento constante -->
+            <div class="simulation-card" onclick="window.location.href='placa-constante.html'">
+                <h3><span class="icon">📊</span> Placa en Movimiento Constante</h3>
+                <div class="features">
+                    <span class="feature-tag">Solución Analítica</span>
+                    <span class="feature-tag">Solución Numérica</span>
+                    <span class="feature-tag">Comparación RMS</span>
+                </div>
+                <p>
+                    Una placa plana se pone en movimiento repentino con velocidad constante.
+                    El perfil de velocidades del fluido evoluciona hasta alcanzar el estado estacionario.
+                </p>
+                <div class="equation">
+                    u(y,t) = v·erfc(y/(2√(νt)))
+                </div>
+                <p style="font-size: 0.9em; color: #718096;">
+                    <strong>Características:</strong> Difusión viscosa, función error complementaria,
+                    comparación con diferencias finitas.
+                </p>
+                <a href="placa-constante.html" class="btn" onclick="event.stopPropagation()">Ver Simulación →</a>
+            </div>
+
+            <!-- Simulación 2: Placa oscilante -->
+            <div class="simulation-card" onclick="window.location.href='placa-oscilante.html'">
+                <h3><span class="icon">〰️</span> Placa Oscilante <span class="badge">MODERNA</span></h3>
+                <div class="features">
+                    <span class="feature-tag">Segundo Problema de Stokes</span>
+                    <span class="feature-tag">React + Tailwind</span>
+                    <span class="feature-tag">Onda de Corte</span>
+                </div>
+                <p>
+                    Una placa oscila con movimiento armónico. El fluido responde con una onda
+                    que se atenúa exponencialmente con la altura y presenta un desfase espacial.
+                </p>
+                <div class="equation">
+                    u(y,t) = v₀·e⁻ᵏʸ·cos(ωt - ky)<br>
+                    k = √(ω/(2ν)), δ = √(2ν/ω)
+                </div>
+                <p style="font-size: 0.9em; color: #718096;">
+                    <strong>Características:</strong> Profundidad de penetración, número de onda,
+                    atenuación exponencial, interfaz moderna.
+                </p>
+                <a href="placa-oscilante.html" class="btn btn-secondary" onclick="event.stopPropagation()">Ver
+                    Simulación →</a>
+            </div>
+        </div>
+
+        <h2 class="section-title">✈️ Aerodinámica y Sustentación</h2>
+
+        <div class="simulations-grid">
+            <!-- Simulación 3: Simulador Aerodinámico -->
+            <div class="simulation-card" onclick="window.location.href='simulador-aerodinamico.html'">
+                <h3><span class="icon">🚀</span> Simulador Aerodinámico <span class="badge new">NUEVO</span></h3>
+                <div class="features">
+                    <span class="feature-tag aero">Kutta-Joukowski</span>
+                    <span class="feature-tag aero">Transformación de Joukowski</span>
+                    <span class="feature-tag aero">Visualización en Tiempo Real</span>
+                    <span class="feature-tag aero">4 Geometrías</span>
+                </div>
+                <p>
+                    Simulador interactivo modernizado basado en el <strong>FoilSim de NASA Glenn Research
+                        Center</strong>.
+                    Analiza perfiles aerodinámicos (NACA), elipses, placas planas y cilindros calculando
+                    sustentación, arrastre y eficiencia aerodinámica en tiempo real.
+                </p>
+                <div class="equation">
+                    L = ρ × V × Γ × span<br>
+                    C<sub>L</sub> = (4π/c) × (Γ/V)<br>
+                    Re = (ρVc)/μ
+                </div>
+                <p style="font-size: 0.9em; color: #718096;">
+                    <strong>Geometrías disponibles:</strong> Perfil aerodinámico (Joukowski), Elipse,
+                    Placa plana, Cilindro.<br>
+                    <strong>Física:</strong> Teorema de Kutta-Joukowski, transformación de Joukowski,
+                    visualización de líneas de flujo, cálculo de número de Reynolds, relación L/D.<br>
+                    <strong>Diseño:</strong> Interfaz con gradientes cyan/magenta, animaciones fluidas,
+                    controles intuitivos y visualización en canvas HTML5.
+                </p>
+                <a href="simulador-aerodinamico.html" class="btn btn-aero" onclick="event.stopPropagation()">Ver
+                    Simulación →</a>
+            </div>
+
+            <!-- Placeholder para futuras simulaciones -->
+
+            <!-- Simulación 4: Motor a Reacción -->
+            <div class="simulation-card" onclick="window.location.href='simulador-motor-reaccion.html'">
+                <h3><span class="icon">🔥</span> Simulador de Motor a Reacción <span class="badge nasa">NASA</span></h3>
+                <div class="features">
+                    <span class="feature-tag aero">Ciclo Brayton</span>
+                    <span class="feature-tag aero">Termodinámica</span>
+                    <span class="feature-tag aero">Rendimiento</span>
+                    <span class="feature-tag aero">EngineSim</span>
+                </div>
+                <p>
+                    Simulador modernizado basado en el <strong>EngineSim de NASA Glenn Research Center</strong>.
+                    Calcula el rendimiento termodinámico de motores a reacción (turborreactores, turbofan,
+                    estatorreactores) mediante el ciclo Brayton.
+                </p>
+                <div class="equation">
+                    F = ṁ(V<sub>exit</sub> - V<sub>flight</sub>)<br>
+                    η = 1 - (T₁/T₃)·π^((γ-1)/γ)<br>
+                    TSFC = ṁ<sub>fuel</sub>/F
+                </div>
+                <p style="font-size: 0.9em; color: #718096;">
+                    <strong>Parámetros ajustables:</strong> Altitud, velocidad de vuelo, relación de compresión,
+                    temperatura de entrada a turbina, acelerador.<br>
+                    <strong>Resultados:</strong> Empuje, consumo de combustible, TSFC, eficiencia térmica,
+                    relación empuje/peso, flujo de aire.<br>
+                    <strong>Física:</strong> Atmósfera estándar ISA, ecuaciones de Brayton, compresión/expansión
+                    adiabática, combustión isobárica, número de Mach.
+                </p>
+                <a href="simulador-motor-reaccion.html" class="btn btn-aero" onclick="event.stopPropagation()">Ver
+                    Simulación →</a>
+            </div>
+        </div>
+
+        <h2 class="section-title">🔧 Hidráulica de Tuberías</h2>
+
+        <div class="simulations-grid">
+            <!-- Simulación 5: Pérdida de Carga -->
+            <div class="simulation-card" onclick="window.location.href='simulador-perdida-carga.html'">
+                <h3><span class="icon">🚰</span> Pérdida de Carga en Tuberías <span class="badge new">NUEVO</span></h3>
+                <div class="features">
+                    <span class="feature-tag hidra">Darcy-Weisbach</span>
+                    <span class="feature-tag hidra">Reynolds</span>
+                    <span class="feature-tag hidra">Pérdidas Menores</span>
+                    <span class="feature-tag hidra">Tiempo Real</span>
+                </div>
+                <p>
+                    Simulador interactivo que visualiza la pérdida de carga en tuberías horizontales.
+                    Muestra el gradiente de presión mediante colores y partículas animadas que
+                    representan el flujo del fluido.
+                </p>
+                <div class="equation">
+                    h<sub>f</sub> = f·(L/D)·(V²/2g) + ΣK·(V²/2g)<br>
+                    Re = VD/ν<br>
+                    f = función(Re, ε/D)
+                </div>
+                <p style="font-size: 0.9em; color: #718096;">
+                    <strong>Parámetros ajustables:</strong> Longitud, diámetro, velocidad, viscosidad,
+                    material de tubería (rugosidad).<br>
+                    <strong>Accesorios:</strong> Codos 90°, válvulas, entradas y salidas.<br>
+                    <strong>Resultados:</strong> Número de Reynolds, factor de fricción, régimen de flujo,
+                    pérdidas por fricción y accesorios.
+                </p>
+                <a href="simulador-perdida-carga.html" class="btn btn-hidra" onclick="event.stopPropagation()">Ver
+                    Simulación →</a>
+            </div>
+
+            <!-- Simulación 6: Sistema de Bombeo -->
+            <div class="simulation-card" onclick="window.location.href='simulador-bombeo.html'">
+                <h3><span class="icon">⚙️</span> Sistema de Bombeo <span class="badge new">NUEVO</span></h3>
+                <div class="features">
+                    <span class="feature-tag hidra">Curva de Bomba</span>
+                    <span class="feature-tag hidra">Curva del Sistema</span>
+                    <span class="feature-tag hidra">Punto de Operación</span>
+                    <span class="feature-tag hidra">Potencia</span>
+                </div>
+                <p>
+                    Laboratorio virtual completo para analizar sistemas de impulsión de agua con bomba.
+                    Calcula iterativamente el punto de funcionamiento y muestra las curvas características
+                    en tiempo real.
+                </p>
+                <div class="equation">
+                    H<sub>sistema</sub> = H<sub>g</sub> + h<sub>f</sub><br>
+                    H<sub>bomba</sub> = H₀ - a·Q²<br>
+                    P = ρgQH/η
+                </div>
+                <p style="font-size: 0.9em; color: #718096;">
+                    <strong>Parámetros del sistema:</strong> Desnivel geométrico, longitud y diámetro de tubería,
+                    rugosidad, viscosidad, accesorios.<br>
+                    <strong>Curva de bomba:</strong> Configurable (H₀, coeficiente a, Q máximo).<br>
+                    <strong>Resultados:</strong> Caudal y altura de operación, velocidad, Reynolds,
+                    pérdidas totales, potencia hidráulica y del motor.
+                </p>
+                <a href="simulador-bombeo.html" class="btn btn-hidra" onclick="event.stopPropagation()">Ver Simulación
+                    →</a>
+            </div>
+        </div>
+
+        <footer>
+            <h3>🎓 Información Académica</h3>
+            <p>
+                <strong>Asignatura:</strong> INSTALACIONES Y MÁQUINAS HIDRÁULICAS Y TÉRMICAS<br>
+                <strong>Universidad:</strong> Universidad de Cádiz<br>
+                <strong>Autor:</strong> Santiago Domínguez
+            </p>
+
+            <div class="contact-info">
+                <p style="font-size: 0.9em; color: #718096;">
+                    Estas simulaciones han sido desarrolladas con fines educativos para ilustrar
+                    las soluciones clásicas de las ecuaciones de Navier-Stokes y los principios
+                    fundamentales de la aerodinámica.
+                </p>
+                <p style="margin-top: 10px; font-size: 0.9em;">
+                    <strong>Referencias:</strong> NASA Glenn Research Center (FoilSim, EngineSim),
+                    Universidad del País Vasco (Física Interactiva)
+                </p>
+            </div>
+
+            <p style="margin-top: 20px; color: #a0aec0; font-size: 0.85em;">
+                © 2025 Santiago Domínguez - Universidad de Cádiz
+            </p>
+        </footer>
+    </div>
+
+    <a href="https://github.com" class="github-link" target="_blank">
+        <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
+            <path
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+        Ver en GitHub
+    </a>
+</body>
+
+</html>

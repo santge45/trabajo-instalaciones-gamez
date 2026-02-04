@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placa Oscilante - Santiago Domínguez UCA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #424c75 0%, #764ba2 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .watermark-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('logo_UCA.png');
+            background-repeat: repeat;
+            background-size: 300px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+        }
+
+        .author {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #2d3748;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .canvas-wrapper {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        canvas {
+            width: 100%;
+            height: 550px;
+            display: block;
+            border-radius: 4px;
+        }
+
+        .time-display {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .control-value {
+            font-family: 'Courier New', monospace;
+            color: #2d3748;
+            font-size: 0.9rem;
+            background: #f7fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #64748b;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-btn {
+            width: 28px;
+            height: 28px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            color: #475569;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .slider-btn:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+        }
+
+        .controls-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.35);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .derived-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .derived-item {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .derived-label {
+            font-size: 0.75rem;
+            color: #4a5568;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .derived-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.3rem;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .derived-unit {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-left: 0.2rem;
+        }
+
+        .info-panel {
+            grid-column: 1 / -1;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
+        }
+
+        .info-title {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .info-text {
+            color: #4a5568;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .equation {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            border-left: 3px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            color: #2d3748;
+        }
+
+        .equation-title {
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        }
+
+        @media (max-width: 1400px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            canvas {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            canvas {
+                height: 400px;
+            }
+
+            .controls-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .derived-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <body>
+        <div class="watermark-pattern"></div>
+        <a href="index.html" class="back-button">Volver al Inicio</a>
+
+        <div class="container">
+            <header>
+                <h1>Placa Oscilante</h1>
+                <div class="subtitle">Segundo Problema de Stokes</div>
+                <div class="author">Santiago Domínguez · Universidad de Cádiz</div>
+            </header>
+
+            <div class="main-layout">
+                <div class="card">
+                    <h2 class="card-title">Visualización del Flujo</h2>
+                    <div class="canvas-wrapper">
+                        <div class="time-display" id="timeDisplay">t = 0.00 s</div>
+                        <canvas id="canvas"></canvas>
+                    </div>
+                    <div class="controls-buttons" style="margin-top: 1rem;">
+                        <button class="btn" id="playBtn">▶ Iniciar</button>
+                        <button class="btn" id="pauseBtn" disabled>⏸ Pausar</button>
+                        <button class="btn" id="resetBtn">↻ Reiniciar</button>
+                    </div>
+                </div>
+
+                <div class="controls-panel">
+                    <div class="card">
+                        <h2 class="card-title">Parámetros de Control</h2>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Amplitud (v₀)</span>
+                                <span class="control-value" id="amplitudValue">1.0 m/s</span>
+                            </div>
+                            <div class="slider-container">
+                                <button class="slider-btn" id="amplitudDown">−</button>
+                                <input type="range" id="amplitudSlider" min="0.1" max="3" step="0.1" value="1.0">
+                                <button class="slider-btn" id="amplitudUp">+</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Frecuencia Angular (ω)</span>
+                                <span class="control-value" id="frecuenciaValue">2.0 rad/s</span>
+                            </div>
+                            <div class="slider-container">
+                                <button class="slider-btn" id="frecuenciaDown">−</button>
+                                <input type="range" id="frecuenciaSlider" min="0.5" max="10" step="0.1" value="2.0">
+                                <button class="slider-btn" id="frecuenciaUp">+</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Viscosidad Cinemática (ν)</span>
+                                <span class="control-value" id="viscosidadValue">0.01 m²/s</span>
+                            </div>
+                            <div class="slider-container">
+                                <button class="slider-btn" id="viscosidadDown">−</button>
+                                <input type="range" id="viscosidadSlider" min="0.001" max="0.1" step="0.001"
+                                    value="0.01">
+                                <button class="slider-btn" id="viscosidadUp">+</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Altura Máxima</span>
+                                <span class="control-value" id="alturaValue">2.0 m</span>
+                            </div>
+                            <div class="slider-container">
+                                <button class="slider-btn" id="alturaDown">−</button>
+                                <input type="range" id="alturaSlider" min="0.5" max="5" step="0.1" value="2.0">
+                                <button class="slider-btn" id="alturaUp">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Parámetros Calculados</h2>
+                        <div class="derived-grid">
+                            <div class="derived-item">
+                                <div class="derived-label">Número de Onda (k)</div>
+                                <div class="derived-value" id="kValue">0.000<span class="derived-unit">m⁻¹</span></div>
+                            </div>
+                            <div class="derived-item">
+                                <div class="derived-label">Profundidad δ</div>
+                                <div class="derived-value" id="deltaValue">0.000<span class="derived-unit">m</span>
+                                </div>
+                            </div>
+                            <div class="derived-item">
+                                <div class="derived-label">Periodo (T)</div>
+                                <div class="derived-value" id="periodoValue">0.00<span class="derived-unit">s</span>
+                                </div>
+                            </div>
+                            <div class="derived-item">
+                                <div class="derived-label">Longitud de Onda (λ)</div>
+                                <div class="derived-value" id="longitudValue">0.000<span class="derived-unit">m</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3 class="info-title">📐 Fundamento Teórico</h3>
+
+                    <p class="info-text">
+                        El <strong>Segundo Problema de Stokes</strong> describe el flujo de un fluido viscoso
+                        semi-infinito sobre una placa plana que oscila con movimiento armónico simple.
+                        Este problema clásico de la mecánica de fluidos tiene solución analítica exacta.
+                    </p>
+
+                    <div class="equation">
+                        <div class="equation-title">Ecuación de Velocidad</div>
+                        u(y,t) = v₀ · e⁻ᵏʸ · cos(ωt - ky)
+                    </div>
+
+                    <div class="equation">
+                        <div class="equation-title">Número de Onda</div>
+                        k = √(ω / 2ν)
+                    </div>
+
+                    <div class="equation">
+                        <div class="equation-title">Profundidad de Penetración</div>
+                        δ = √(2ν / ω) = 1/k
+                    </div>
+
+                    <p class="info-text">
+                        <strong>Observaciones importantes:</strong>
+                    </p>
+                    <ul style="color: #4a5568; line-height: 1.7; margin-left: 1.5rem; font-size: 0.95rem;">
+                        <li>La velocidad del fluido decae exponencialmente con la altura (factor e⁻ᵏʸ)</li>
+                        <li>Existe un desfase espacial proporcional a la altura (término -ky)</li>
+                        <li>A una distancia δ de la placa, la amplitud se reduce al 37% (1/e)</li>
+                        <li>La profundidad de penetración δ indica hasta dónde se transmite el movimiento</li>
+                        <li>Mayor viscosidad → mayor profundidad de penetración</li>
+                        <li>Mayor frecuencia → menor profundidad de penetración</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * window.devicePixelRatio;
+                canvas.height = rect.height * window.devicePixelRatio;
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            let parametros = {
+                amplitud: 1.0,
+                frecuencia: 2.0,
+                viscosidad: 0.01,
+                alturaMaxima: 2.0
+            };
+
+            let tiempo = 0;
+            let animando = false;
+            let animationId = null;
+
+            const sliders = {
+                amplitud: document.getElementById('amplitudSlider'),
+                frecuencia: document.getElementById('frecuenciaSlider'),
+                viscosidad: document.getElementById('viscosidadSlider'),
+                altura: document.getElementById('alturaSlider')
+            };
+
+            const valores = {
+                amplitud: document.getElementById('amplitudValue'),
+                frecuencia: document.getElementById('frecuenciaValue'),
+                viscosidad: document.getElementById('viscosidadValue'),
+                altura: document.getElementById('alturaValue'),
+                k: document.getElementById('kValue'),
+                delta: document.getElementById('deltaValue'),
+                periodo: document.getElementById('periodoValue'),
+                longitud: document.getElementById('longitudValue'),
+                tiempo: document.getElementById('timeDisplay')
+            };
+
+            const botones = {
+                play: document.getElementById('playBtn'),
+                pause: document.getElementById('pauseBtn'),
+                reset: document.getElementById('resetBtn')
+            };
+
+            const sliderButtons = {
+                amplitud: { down: 'amplitudDown', up: 'amplitudUp', slider: sliders.amplitud },
+                frecuencia: { down: 'frecuenciaDown', up: 'frecuenciaUp', slider: sliders.frecuencia },
+                viscosidad: { down: 'viscosidadDown', up: 'viscosidadUp', slider: sliders.viscosidad },
+                altura: { down: 'alturaDown', up: 'alturaUp', slider: sliders.altura }
+            };
+
+            sliders.amplitud.addEventListener('input', (e) => {
+                parametros.amplitud = parseFloat(e.target.value);
+                actualizarInterfaz();
+            });
+
+            sliders.frecuencia.addEventListener('input', (e) => {
+                parametros.frecuencia = parseFloat(e.target.value);
+                actualizarInterfaz();
+            });
+
+            sliders.viscosidad.addEventListener('input', (e) => {
+                parametros.viscosidad = parseFloat(e.target.value);
+                actualizarInterfaz();
+            });
+
+            sliders.altura.addEventListener('input', (e) => {
+                parametros.alturaMaxima = parseFloat(e.target.value);
+                actualizarInterfaz();
+            });
+
+            Object.entries(sliderButtons).forEach(([param, buttons]) => {
+                document.getElementById(buttons.down).addEventListener('click', () => {
+                    const slider = buttons.slider;
+                    const step = parseFloat(slider.step);
+                    const newValue = Math.max(parseFloat(slider.min), parseFloat(slider.value) - step);
+                    slider.value = newValue;
+                    slider.dispatchEvent(new Event('input'));
+                });
+
+                document.getElementById(buttons.up).addEventListener('click', () => {
+                    const slider = buttons.slider;
+                    const step = parseFloat(slider.step);
+                    const newValue = Math.min(parseFloat(slider.max), parseFloat(slider.value) + step);
+                    slider.value = newValue;
+                    slider.dispatchEvent(new Event('input'));
+                });
+            });
+
+            botones.play.addEventListener('click', () => {
+                animando = true;
+                botones.play.disabled = true;
+                botones.pause.disabled = false;
+                animar();
+            });
+
+            botones.pause.addEventListener('click', () => {
+                animando = false;
+                botones.play.disabled = false;
+                botones.pause.disabled = true;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+            });
+
+            botones.reset.addEventListener('click', () => {
+                tiempo = 0;
+                actualizarInterfaz();
+                dibujar();
+            });
+
+            function calcularParametrosDerivados() {
+                const k = Math.sqrt(parametros.frecuencia / (2 * parametros.viscosidad));
+                const delta = Math.sqrt(2 * parametros.viscosidad / parametros.frecuencia);
+                const periodo = 2 * Math.PI / parametros.frecuencia;
+                const longitud = 2 * Math.PI / k;
+
+                return { k, delta, periodo, longitud };
+            }
+
+            function velocidadPlaca(t) {
+                return parametros.amplitud * Math.cos(parametros.frecuencia * t);
+            }
+
+            function velocidadFluido(y, t, k) {
+                return parametros.amplitud *
+                    Math.exp(-k * y) *
+                    Math.cos(parametros.frecuencia * t - k * y);
+            }
+
+            function actualizarInterfaz() {
+                valores.amplitud.textContent = `${parametros.amplitud.toFixed(1)} m/s`;
+                valores.frecuencia.textContent = `${parametros.frecuencia.toFixed(1)} rad/s`;
+                valores.viscosidad.textContent = `${parametros.viscosidad.toFixed(3)} m²/s`;
+                valores.altura.textContent = `${parametros.alturaMaxima.toFixed(1)} m`;
+
+                const { k, delta, periodo, longitud } = calcularParametrosDerivados();
+                valores.k.innerHTML = `${k.toFixed(3)}<span class="derived-unit">m⁻¹</span>`;
+                valores.delta.innerHTML = `${delta.toFixed(3)}<span class="derived-unit">m</span>`;
+                valores.periodo.innerHTML = `${periodo.toFixed(2)}<span class="derived-unit">s</span>`;
+                valores.longitud.innerHTML = `${longitud.toFixed(3)}<span class="derived-unit">m</span>`;
+
+                if (!animando) {
+                    dibujar();
+                }
+            }
+
+            function dibujar() {
+                const width = canvas.width / window.devicePixelRatio;
+                const height = canvas.height / window.devicePixelRatio;
+                const origenX = width / 2;
+                const origenY = height - 80;
+                const escalaX = 120;
+                const escalaY = (origenY - 60) / parametros.alturaMaxima;
+
+                const { k, delta } = calcularParametrosDerivados();
+
+                ctx.clearRect(0, 0, width, height);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 1;
+                for (let x = 0; x < width; x += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, height);
+                    ctx.stroke();
+                }
+                for (let y = 0; y < height; y += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(width, y);
+                    ctx.stroke();
+                }
+
+                const deltaY = origenY - delta * escalaY;
+                ctx.strokeStyle = '#f6ad55';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([10, 5]);
+                ctx.beginPath();
+                ctx.moveTo(50, deltaY);
+                ctx.lineTo(width - 50, deltaY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = '#d97706';
+                ctx.font = 'bold 12px system-ui';
+                ctx.textAlign = 'right';
+                ctx.fillText(`δ = ${delta.toFixed(2)} m`, width - 60, deltaY - 10);
+
+                ctx.strokeStyle = '#2d3748';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(origenX, origenY);
+                ctx.lineTo(origenX, 40);
+                ctx.stroke();
+
+                ctx.fillStyle = '#4a5568';
+                ctx.font = '11px system-ui';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                for (let i = 0; i <= 10; i++) {
+                    const y = i * parametros.alturaMaxima / 10;
+                    const yPx = origenY - y * escalaY;
+                    if (i % 2 === 0) {
+                        ctx.fillText(y.toFixed(1), origenX - 10, yPx);
+                    }
+                    ctx.strokeStyle = '#cbd5e1';
+                    ctx.beginPath();
+                    ctx.moveTo(origenX - 5, yPx);
+                    ctx.lineTo(origenX + 5, yPx);
+                    ctx.stroke();
+                }
+
+                ctx.save();
+                ctx.translate(25, height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.textAlign = 'center';
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 12px system-ui';
+                ctx.fillStyle = '#2d3748';
+                ctx.fillText('Altura y (m)', 0, 0);
+                ctx.restore();
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                for (let i = -2; i <= 2; i++) {
+                    const u = i * parametros.amplitud / 2;
+                    const xPx = origenX + u * escalaX;
+                    ctx.fillText(u.toFixed(1), xPx, origenY + 10);
+                }
+                ctx.font = 'bold 12px system-ui';
+                ctx.fillText('Velocidad u (m/s)', origenX, origenY + 35);
+
+                const vPlaca = velocidadPlaca(tiempo);
+                const xPlaca = origenX + vPlaca * escalaX;
+
+                ctx.fillStyle = '#718096';
+                ctx.fillRect(0, origenY - 5, width, 10);
+
+                ctx.fillStyle = vPlaca > 0 ? '#10b981' : '#ef4444';
+                ctx.beginPath();
+                ctx.arc(xPlaca, origenY, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+
+                for (let y = 0; y <= parametros.alturaMaxima; y += 0.02) {
+                    const u = velocidadFluido(y, tiempo, k);
+                    const xPx = origenX + u * escalaX;
+                    const yPx = origenY - y * escalaY;
+
+                    if (y === 0) {
+                        ctx.moveTo(xPx, yPx);
+                    } else {
+                        ctx.lineTo(xPx, yPx);
+                    }
+                }
+
+                ctx.stroke();
+
+                valores.tiempo.textContent = `t = ${tiempo.toFixed(2)} s`;
+            }
+
+            function animar() {
+                if (!animando) return;
+
+                tiempo += 0.02;
+                dibujar();
+
+                animationId = requestAnimationFrame(animar);
+            }
+
+            actualizarInterfaz();
+            dibujar();
+        </script>
+    </body>
+
+</html>

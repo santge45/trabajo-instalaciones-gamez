@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Aerodinámico - Santiago Domínguez UCA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-decoration: none;
+            color: #94a3b8;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #e2e8f0;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .back-button::before {
+            content: '← ';
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .author {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        #airfoilCanvas {
+            width: 100%;
+            height: 550px;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: block;
+        }
+
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .shape-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .shape-btn {
+            padding: 0.75rem;
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 6px;
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .shape-btn:hover {
+            background: rgba(100, 116, 139, 0.4);
+            border-color: rgba(148, 163, 184, 0.5);
+        }
+
+        .shape-btn.active {
+            background: rgba(100, 116, 139, 0.5);
+            border-color: #94a3b8;
+            color: #f8fafc;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        .control-value {
+            font-family: 'Courier New', monospace;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #64748b;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #94a3b8;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #64748b;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-btn {
+            width: 28px;
+            height: 28px;
+            background: rgba(100, 116, 139, 0.2);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 4px;
+            color: #94a3b8;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .slider-btn:hover {
+            background: rgba(100, 116, 139, 0.4);
+            border-color: rgba(148, 163, 184, 0.5);
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            border-radius: 6px;
+            color: #fca5a5;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: rgba(239, 68, 68, 0.5);
+            border-color: rgba(239, 68, 68, 0.7);
+        }
+
+        .output-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .output-item {
+            background: rgba(100, 116, 139, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .output-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .output-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.3rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .output-unit {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-left: 0.2rem;
+        }
+
+        .info-panel {
+            grid-column: 1 / -1;
+            background: rgba(30, 41, 59, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 1rem;
+        }
+
+        .info-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.75rem;
+            color: #f8fafc;
+            font-weight: 600;
+        }
+
+        .info-text {
+            color: #cbd5e1;
+            line-height: 1.7;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .equation {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 0.75rem 0;
+            border-left: 3px solid #64748b;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+        }
+
+        .equation-title {
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        }
+
+        @media (max-width: 1400px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            #airfoilCanvas {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            #airfoilCanvas {
+                height: 400px;
+            }
+            
+            .output-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-button">Volver al Inicio</a>
+    
+    <div class="container">
+        <header>
+            <h1>Simulador de Perfiles Aerodinámicos</h1>
+            <div class="subtitle">Análisis Kutta-Joukowski</div>
+            <div class="author">Santiago Domínguez · Universidad de Cádiz</div>
+        </header>
+
+        <div class="main-layout">
+            <div class="card">
+                <h2 class="card-title">Visualización del Perfil</h2>
+                <canvas id="airfoilCanvas"></canvas>
+            </div>
+
+            <div class="controls-panel">
+                <div class="card">
+                    <h2 class="card-title">Parámetros de Control</h2>
+                    
+                    <div class="shape-selector">
+                        <button class="shape-btn active" data-shape="airfoil">Perfil Alar</button>
+                        <button class="shape-btn" data-shape="ellipse">Elipse</button>
+                        <button class="shape-btn" data-shape="plate">Placa Plana</button>
+                        <button class="shape-btn" data-shape="cylinder">Cilindro</button>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Ángulo de Ataque</span>
+                            <span class="control-value" id="angleValue">5.0°</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" id="angleDown">−</button>
+                            <input type="range" id="angleSlider" min="-20" max="20" step="0.1" value="5.0">
+                            <button class="slider-btn" id="angleUp">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Combadura (Camber)</span>
+                            <span class="control-value" id="camberValue">0.0%</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" id="camberDown">−</button>
+                            <input type="range" id="camberSlider" min="-20" max="20" step="0.1" value="0.0">
+                            <button class="slider-btn" id="camberUp">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Espesor</span>
+                            <span class="control-value" id="thicknessValue">12.5%</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" id="thicknessDown">−</button>
+                            <input type="range" id="thicknessSlider" min="1" max="25" step="0.1" value="12.5">
+                            <button class="slider-btn" id="thicknessUp">+</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Velocidad</span>
+                            <span class="control-value" id="velocityValue">100 m/s</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" id="velocityDown">−</button>
+                            <input type="range" id="velocitySlider" min="10" max="300" step="1" value="100">
+                            <button class="slider-btn" id="velocityUp">+</button>
+                        </div>
+                    </div>
+
+                    <button class="reset-btn" id="resetBtn">Reiniciar</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Resultados Aerodinámicos</h2>
+                    <div class="output-grid">
+                        <div class="output-item">
+                            <div class="output-label">Coef. Sustentación</div>
+                            <div class="output-value" id="clValue">0.0000</div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Coef. Arrastre</div>
+                            <div class="output-value" id="cdValue">0.0000</div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Fuerza Sustentación</div>
+                            <div class="output-value" id="liftValue">0.0<span class="output-unit">N</span></div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Fuerza Arrastre</div>
+                            <div class="output-value" id="dragValue">0.0<span class="output-unit">N</span></div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Reynolds</div>
+                            <div class="output-value" id="reynoldsValue">0.0</div>
+                        </div>
+                        <div class="output-item">
+                            <div class="output-label">Relación L/D</div>
+                            <div class="output-value" id="ldRatioValue">0.0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <h3 class="info-title">📐 Ecuaciones Fundamentales</h3>
+                
+                <div class="equation">
+                    <div class="equation-title">1. Teorema de Kutta-Joukowski (Sustentación)</div>
+                    L = ρ × V × Γ × span<br>
+                    donde Γ = 2πrV sin(α + β)
+                </div>
+
+                <div class="equation">
+                    <div class="equation-title">2. Coeficiente de Sustentación</div>
+                    C<sub>L</sub> = (4π/c) × Γ/V<br>
+                    c = cuerda del perfil
+                </div>
+
+                <div class="equation">
+                    <div class="equation-title">3. Presión Dinámica</div>
+                    q = ½ρV²<br>
+                    ρ = densidad del aire (varía con altitud)
+                </div>
+
+                <div class="equation">
+                    <div class="equation-title">4. Número de Reynolds</div>
+                    Re = (ρVc)/μ<br>
+                    μ = viscosidad dinámica del aire
+                </div>
+
+                <div class="equation">
+                    <div class="equation-title">5. Geometría de Joukowski</div>
+                    y<sub>c</sub> = camber/50<br>
+                    r = t/8 + √((t²/64) + y<sub>c</sub>² + 1)<br>
+                    β = arcsin(y<sub>c</sub>/r)
+                </div>
+
+                <p style="margin-top: 1rem; color: #cbd5e1; line-height: 1.7; font-size: 0.9rem;">
+                    Este simulador utiliza la transformación de Joukowski para generar 
+                    perfiles aerodinámicos y calcula las fuerzas mediante el teorema de Kutta-Joukowski. 
+                    La circulación (Γ) alrededor del perfil genera sustentación.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const PI = Math.PI;
+        const AIR_DENSITY = 1.225;
+        const AIR_VISCOSITY = 1.81e-5;
+        const CHORD = 1.0;
+        const SPAN = 10.0;
+        const WING_AREA = CHORD * SPAN;
+
+        const canvas = document.getElementById('airfoilCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const angleSlider = document.getElementById('angleSlider');
+        const camberSlider = document.getElementById('camberSlider');
+        const thicknessSlider = document.getElementById('thicknessSlider');
+        const velocitySlider = document.getElementById('velocitySlider');
+        
+        const sliderButtons = {
+            angle: { down: 'angleDown', up: 'angleUp', slider: angleSlider },
+            camber: { down: 'camberDown', up: 'camberUp', slider: camberSlider },
+            thickness: { down: 'thicknessDown', up: 'thicknessUp', slider: thicknessSlider },
+            velocity: { down: 'velocityDown', up: 'velocityUp', slider: velocitySlider }
+        };
+
+        let currentShape = 'airfoil';
+        let params = {
+            angle: 5.0,
+            camber: 0.0,
+            thickness: 12.5,
+            velocity: 100
+        };
+
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            drawAirfoil();
+        }
+
+        function calculateJoukowskiGeometry() {
+            const camberNorm = params.camber / 25.0;
+            const thicknessNorm = params.thickness / 25.0;
+            const yc = camberNorm / 2.0;
+            const r = thicknessNorm / 4.0 + Math.sqrt((thicknessNorm * thicknessNorm) / 16.0 + yc * yc + 1.0);
+            const beta = Math.asin(yc / r) * (180 / PI);
+            const xc = 1.0 - Math.sqrt(r * r - yc * yc);
+            
+            return { r, beta, xc, yc };
+        }
+
+        function calculateLiftCoefficient(geom) {
+            const angleRad = params.angle * (PI / 180);
+            const betaRad = geom.beta * (PI / 180);
+            const gamval = 2.0 * geom.r * Math.sin(angleRad + betaRad);
+            
+            const leg = geom.xc - Math.sqrt(geom.r * geom.r - geom.yc * geom.yc);
+            const teg = geom.xc + Math.sqrt(geom.r * geom.r - geom.yc * geom.yc);
+            const lem = leg + 1.0 / leg;
+            const tem = teg + 1.0 / teg;
+            const chord = tem - lem;
+            
+            let cl = gamval * 4.0 * PI / chord;
+            
+            let stfact;
+            if (params.angle > 10.0) {
+                stfact = 0.5 + 0.1 * params.angle - 0.005 * params.angle * params.angle;
+            } else if (params.angle < -10.0) {
+                stfact = 0.5 - 0.1 * params.angle - 0.005 * params.angle * params.angle;
+            } else {
+                stfact = 1.0;
+            }
+            
+            cl = cl * stfact;
+            cl = cl / (1.0 + Math.abs(cl) / (PI * 4.0));
+            
+            return cl;
+        }
+
+        function calculateDragCoefficient(cl) {
+            const cd0 = 0.008;
+            const k = 0.05;
+            const cd = cd0 + k * cl * cl;
+            return cd;
+        }
+
+        function calculateReynolds() {
+            const re = (AIR_DENSITY * params.velocity * CHORD) / AIR_VISCOSITY;
+            return re;
+        }
+
+        function calculateForces() {
+            const geom = calculateJoukowskiGeometry();
+            const cl = calculateLiftCoefficient(geom);
+            const cd = calculateDragCoefficient(cl);
+            const q = 0.5 * AIR_DENSITY * params.velocity * params.velocity;
+            
+            const lift = q * WING_AREA * cl;
+            const drag = q * WING_AREA * cd;
+            const reynolds = calculateReynolds();
+            const ldRatio = drag !== 0 ? lift / drag : 0;
+            
+            return { cl, cd, lift, drag, reynolds, ldRatio };
+        }
+
+        function drawAirfoil() {
+            const width = canvas.width / window.devicePixelRatio;
+            const height = canvas.height / window.devicePixelRatio;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, width, height);
+            
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const scale = Math.min(width, height) * 0.3;
+            
+            drawFlowLines(centerX, centerY, scale);
+            
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(params.angle * PI / 180);
+            
+            switch(currentShape) {
+                case 'airfoil':
+                    drawAirfoilShape(scale);
+                    break;
+                case 'ellipse':
+                    drawEllipseShape(scale);
+                    break;
+                case 'plate':
+                    drawPlateShape(scale);
+                    break;
+                case 'cylinder':
+                    drawCylinderShape(scale);
+                    break;
+            }
+            
+            ctx.restore();
+            
+            drawVelocityVector(centerX, centerY, scale);
+            drawAngleIndicator(centerX, centerY, scale);
+        }
+
+        function drawFlowLines(cx, cy, scale) {
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+            ctx.lineWidth = 1;
+            
+            const numLines = 8;
+            const spacing = scale * 0.3;
+            
+            for (let i = -numLines; i <= numLines; i++) {
+                if (i === 0) continue;
+                
+                ctx.beginPath();
+                const y = cy + i * spacing;
+                
+                for (let x = -scale * 2; x <= scale * 2; x += 5) {
+                    const distFromCenter = Math.abs(y - cy);
+                    const curve = Math.sin(x / (scale * 0.5)) * distFromCenter * 0.05;
+                    ctx.lineTo(cx + x, y + curve);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function drawAirfoilShape(scale) {
+            const points = 100;
+            
+            ctx.beginPath();
+            for (let i = 0; i <= points; i++) {
+                const t = i / points;
+                const x = (t * 2 - 1) * scale;
+                
+                const camberEffect = params.camber / 100;
+                const thicknessEffect = params.thickness / 100;
+                
+                const yUpper = scale * thicknessEffect * (0.6 * Math.sqrt(Math.abs(t)) - 
+                               0.2 * t - 0.2 * t * t + 0.1 * t * t * t) + 
+                               scale * camberEffect * Math.sin(PI * t);
+                
+                if (i === 0) ctx.moveTo(x, -yUpper);
+                else ctx.lineTo(x, -yUpper);
+            }
+            
+            for (let i = points; i >= 0; i--) {
+                const t = i / points;
+                const x = (t * 2 - 1) * scale;
+                
+                const camberEffect = params.camber / 100;
+                const thicknessEffect = params.thickness / 100;
+                
+                const yLower = -scale * thicknessEffect * (0.6 * Math.sqrt(Math.abs(t)) - 
+                               0.2 * t - 0.2 * t * t + 0.1 * t * t * t) + 
+                               scale * camberEffect * Math.sin(PI * t);
+                
+                ctx.lineTo(x, -yLower);
+            }
+            
+            ctx.closePath();
+            
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.4)';
+            ctx.fill();
+            
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawEllipseShape(scale) {
+            ctx.beginPath();
+            ctx.ellipse(0, 0, scale, scale * (params.thickness / 25), 0, 0, 2 * PI);
+            
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.4)';
+            ctx.fill();
+            
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawPlateShape(scale) {
+            const thickness = scale * 0.05;
+            
+            ctx.beginPath();
+            ctx.rect(-scale, -thickness/2, scale * 2, thickness);
+            
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.4)';
+            ctx.fill();
+            
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawCylinderShape(scale) {
+            const radius = scale * (params.thickness / 25);
+            
+            ctx.beginPath();
+            ctx.arc(0, 0, radius, 0, 2 * PI);
+            
+            ctx.fillStyle = 'rgba(100, 116, 139, 0.4)';
+            ctx.fill();
+            
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawVelocityVector(cx, cy, scale) {
+            const arrowLength = scale * 0.8;
+            const arrowX = cx - scale * 1.5;
+            const arrowY = cy;
+            
+            ctx.strokeStyle = '#fbbf24';
+            ctx.fillStyle = '#fbbf24';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(arrowX, arrowY);
+            ctx.lineTo(arrowX + arrowLength, arrowY);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(arrowX + arrowLength, arrowY);
+            ctx.lineTo(arrowX + arrowLength - 12, arrowY - 6);
+            ctx.lineTo(arrowX + arrowLength - 12, arrowY + 6);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.font = '12px system-ui';
+            ctx.fillText(`V = ${params.velocity} m/s`, arrowX, arrowY - 15);
+        }
+
+        function drawAngleIndicator(cx, cy, scale) {
+            const radius = 40;
+            const angleRad = params.angle * PI / 180;
+            
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+            ctx.lineWidth = 1;
+            
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, angleRad, angleRad < 0);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#cbd5e1';
+            ctx.font = '12px system-ui';
+            ctx.fillText(`α = ${params.angle.toFixed(1)}°`, cx + 50, cy - 30);
+        }
+
+        function updateUI() {
+            document.getElementById('angleValue').textContent = `${params.angle.toFixed(1)}°`;
+            document.getElementById('camberValue').textContent = `${params.camber.toFixed(1)}%`;
+            document.getElementById('thicknessValue').textContent = `${params.thickness.toFixed(1)}%`;
+            document.getElementById('velocityValue').textContent = `${params.velocity} m/s`;
+            
+            const forces = calculateForces();
+            document.getElementById('clValue').textContent = forces.cl.toFixed(4);
+            document.getElementById('cdValue').textContent = forces.cd.toFixed(4);
+            document.getElementById('liftValue').innerHTML = `${forces.lift.toFixed(1)}<span class="output-unit">N</span>`;
+            document.getElementById('dragValue').innerHTML = `${forces.drag.toFixed(1)}<span class="output-unit">N</span>`;
+            document.getElementById('reynoldsValue').textContent = forces.reynolds.toExponential(2);
+            document.getElementById('ldRatioValue').textContent = forces.ldRatio.toFixed(2);
+            
+            drawAirfoil();
+        }
+
+        angleSlider.addEventListener('input', (e) => {
+            params.angle = parseFloat(e.target.value);
+            updateUI();
+        });
+
+        camberSlider.addEventListener('input', (e) => {
+            params.camber = parseFloat(e.target.value);
+            updateUI();
+        });
+
+        thicknessSlider.addEventListener('input', (e) => {
+            params.thickness = parseFloat(e.target.value);
+            updateUI();
+        });
+
+        velocitySlider.addEventListener('input', (e) => {
+            params.velocity = parseFloat(e.target.value);
+            updateUI();
+        });
+
+        Object.entries(sliderButtons).forEach(([param, buttons]) => {
+            document.getElementById(buttons.down).addEventListener('click', () => {
+                const slider = buttons.slider;
+                const step = parseFloat(slider.step);
+                const newValue = Math.max(parseFloat(slider.min), parseFloat(slider.value) - step);
+                slider.value = newValue;
+                slider.dispatchEvent(new Event('input'));
+            });
+            
+            document.getElementById(buttons.up).addEventListener('click', () => {
+                const slider = buttons.slider;
+                const step = parseFloat(slider.step);
+                const newValue = Math.min(parseFloat(slider.max), parseFloat(slider.value) + step);
+                slider.value = newValue;
+                slider.dispatchEvent(new Event('input'));
+            });
+        });
+
+        document.querySelectorAll('.shape-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentShape = e.target.dataset.shape;
+                updateUI();
+            });
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            params = { angle: 5.0, camber: 0.0, thickness: 12.5, velocity: 100 };
+            angleSlider.value = 5.0;
+            camberSlider.value = 0.0;
+            thicknessSlider.value = 12.5;
+            velocitySlider.value = 100;
+            currentShape = 'airfoil';
+            document.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-shape="airfoil"]').classList.add('active');
+            updateUI();
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+
+        resizeCanvas();
+        updateUI();
+    </script>
+</body>
+</html>

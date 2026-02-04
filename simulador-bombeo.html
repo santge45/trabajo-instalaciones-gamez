@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Sistema de Bombeo - Laboratorio Virtual</title>
+    <style>
+        /* =============================================
+           ESTILOS BASE Y VARIABLES
+           ============================================= */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #424c75 0%, #764ba2 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .watermark-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('logo_UCA.png');
+            background-repeat: repeat;
+            background-size: 300px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* =============================================
+           BOTÓN VOLVER
+           ============================================= */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            color: #2d3748;
+        }
+
+        /* =============================================
+           HEADER
+           ============================================= */
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.3rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+        }
+
+        /* =============================================
+           LAYOUT PRINCIPAL
+           ============================================= */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr 320px;
+            gap: 1rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1400px) {
+            .main-layout {
+                grid-template-columns: 280px 1fr 280px;
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* =============================================
+           TARJETAS
+           ============================================= */
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            color: #2d3748;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title::before {
+            content: '';
+            width: 3px;
+            height: 14px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            margin: 0.75rem 0 0.5rem;
+            color: #4a5568;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* =============================================
+           CONTROLES
+           ============================================= */
+        .control-group {
+            margin-bottom: 0.6rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.3rem;
+            font-size: 0.75rem;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .control-value {
+            font-family: 'Courier New', monospace;
+            color: #2d3748;
+            font-size: 0.75rem;
+            background: #f7fafc;
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+
+        .slider-btn {
+            width: 24px;
+            height: 24px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            color: #475569;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .slider-btn:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+        }
+
+        /* =============================================
+           ACCESORIOS
+           ============================================= */
+        .accessory-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .accessory-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .accessory-label {
+            font-size: 0.7rem;
+            color: #4a5568;
+        }
+
+        .accessory-counter {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #f7fafc;
+            border-radius: 5px;
+            padding: 2px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .accessory-btn {
+            width: 22px;
+            height: 22px;
+            background: #edf2f7;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            color: #4a5568;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .accessory-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .accessory-count {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            min-width: 18px;
+            text-align: center;
+            color: #2d3748;
+        }
+
+        /* =============================================
+           CURVA DE BOMBA
+           ============================================= */
+        .pump-curve-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+
+        .pump-input {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .pump-input label {
+            font-size: 0.65rem;
+            color: #4a5568;
+        }
+
+        .pump-input input {
+            width: 100%;
+            padding: 0.35rem;
+            background: #f7fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            color: #2d3748;
+            font-size: 0.75rem;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .pump-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .pump-info {
+            font-size: 0.65rem;
+            color: #64748b;
+            margin-top: 0.4rem;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* =============================================
+           BOTONES
+           ============================================= */
+        .reset-btn {
+            width: 100%;
+            padding: 0.5rem;
+            background: #fff5f5;
+            border: 1px solid #fc8181;
+            border-radius: 6px;
+            color: #c53030;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .reset-btn:hover {
+            background: #fed7d7;
+        }
+
+        /* =============================================
+           VISUALIZACIÓN CENTRAL
+           ============================================= */
+        .visualization-area {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .canvas-container {
+            position: relative;
+        }
+
+        #systemCanvas {
+            width: 100%;
+            height: 340px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: block;
+        }
+
+        #curveCanvas {
+            width: 100%;
+            height: 260px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: block;
+        }
+
+        /* =============================================
+           RESULTADOS
+           ============================================= */
+        .results-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+
+        .result-item {
+            background: #f7fafc;
+            padding: 0.6rem;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-item.highlight {
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+        }
+
+        .result-item.warning {
+            background: #fffff0;
+            border: 1px solid #f6e05e;
+        }
+
+        .result-item.success {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+        }
+
+        .result-label {
+            font-size: 0.7rem;
+            color: #4a5568;
+        }
+
+        .result-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2d3748;
+            font-family: 'Courier New', monospace;
+        }
+
+        .result-unit {
+            font-size: 0.7rem;
+            color: #718096;
+            font-weight: 400;
+            margin-left: 2px;
+        }
+
+        /* =============================================
+           INDICADORES DE ESTADO
+           ============================================= */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.6rem;
+            background: #f7fafc;
+            border-radius: 6px;
+            font-size: 0.7rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.running {
+            background: #4ade80;
+        }
+
+        .status-dot.stopped {
+            background: #f87171;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* =============================================
+           LEYENDA DEL GRÁFICO
+           ============================================= */
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            color: #4a5568;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .legend-color.pump {
+            background: #3b82f6;
+        }
+
+        .legend-color.system {
+            background: #ef4444;
+        }
+
+        .legend-color.point {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fbbf24;
+        }
+
+        /* =============================================
+           FLOW REGIME BADGE
+           ============================================= */
+        .flow-regime {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .flow-regime.laminar {
+            background: #f0fff4;
+            color: #2f855a;
+        }
+
+        .flow-regime.transition {
+            background: #fffff0;
+            color: #b7791f;
+        }
+
+        .flow-regime.turbulent {
+            background: #fff5f5;
+            color: #c53030;
+        }
+
+        /* =============================================
+           SCROLLBAR PERSONALIZADO
+           ============================================= */
+        .controls-scroll {
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .controls-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .controls-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .controls-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        /* =============================================
+           SEPARADOR
+           ============================================= */
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 0.75rem 0;
+        }
+
+        /* =============================================
+           INFO BOX
+           ============================================= */
+        .info-box {
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+            border-radius: 6px;
+            padding: 0.5rem;
+            font-size: 0.7rem;
+            color: #2c5282;
+            margin-top: 0.5rem;
+        }
+
+        .info-box strong {
+            color: #2a4365;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-button">Volver al Inicio</a>
+    <div class="watermark-pattern"></div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <h1>🔧 Simulador de Sistema de Bombeo</h1>
+            <p class="subtitle">Laboratorio Virtual - Curvas Características y Punto de Operación</p>
+        </header>
+
+        <div class="main-layout">
+            <!-- =============================================
+                 PANEL IZQUIERDO - PARÁMETROS DEL SISTEMA
+                 ============================================= -->
+            <div class="card controls-scroll">
+                <div class="card-title">Parámetros del Sistema</div>
+
+                <!-- Desnivel -->
+                <div class="section-title">📐 Geometría</div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Desnivel (H<sub>g</sub>)</span>
+                        <span class="control-value" id="heightValue">15 m</span>
+                    </div>
+                    <div class="slider-container">
+                        <button class="slider-btn" data-param="height" data-dir="-1">−</button>
+                        <input type="range" id="heightSlider" min="1" max="50" value="15" step="1">
+                        <button class="slider-btn" data-param="height" data-dir="1">+</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Longitud tubería (L)</span>
+                        <span class="control-value" id="lengthValue">50 m</span>
+                    </div>
+                    <div class="slider-container">
+                        <button class="slider-btn" data-param="length" data-dir="-1">−</button>
+                        <input type="range" id="lengthSlider" min="10" max="200" value="50" step="5">
+                        <button class="slider-btn" data-param="length" data-dir="1">+</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Diámetro (D)</span>
+                        <span class="control-value" id="diameterValue">100 mm</span>
+                    </div>
+                    <div class="slider-container">
+                        <button class="slider-btn" data-param="diameter" data-dir="-1">−</button>
+                        <input type="range" id="diameterSlider" min="25" max="300" value="100" step="5">
+                        <button class="slider-btn" data-param="diameter" data-dir="1">+</button>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Propiedades del fluido -->
+                <div class="section-title">💧 Fluido</div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Rugosidad (ε)</span>
+                        <span class="control-value" id="roughnessValue">0.045 mm</span>
+                    </div>
+                    <div class="slider-container">
+                        <button class="slider-btn" data-param="roughness" data-dir="-1">−</button>
+                        <input type="range" id="roughnessSlider" min="0.001" max="2" value="0.045" step="0.001">
+                        <button class="slider-btn" data-param="roughness" data-dir="1">+</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Viscosidad (ν)</span>
+                        <span class="control-value" id="viscosityValue">1.0 cSt</span>
+                    </div>
+                    <div class="slider-container">
+                        <button class="slider-btn" data-param="viscosity" data-dir="-1">−</button>
+                        <input type="range" id="viscositySlider" min="0.5" max="50" value="1" step="0.5">
+                        <button class="slider-btn" data-param="viscosity" data-dir="1">+</button>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Accesorios -->
+                <div class="section-title">🔩 Accesorios</div>
+                <div class="accessory-grid">
+                    <div class="accessory-item">
+                        <span class="accessory-label">Codos 90°</span>
+                        <div class="accessory-counter">
+                            <button class="accessory-btn" onclick="changeAccessory('elbows', -1)">−</button>
+                            <span class="accessory-count" id="elbowsCount">2</span>
+                            <button class="accessory-btn" onclick="changeAccessory('elbows', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="accessory-item">
+                        <span class="accessory-label">Válvulas</span>
+                        <div class="accessory-counter">
+                            <button class="accessory-btn" onclick="changeAccessory('valves', -1)">−</button>
+                            <span class="accessory-count" id="valvesCount">1</span>
+                            <button class="accessory-btn" onclick="changeAccessory('valves', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="accessory-item">
+                        <span class="accessory-label">Válv. Retención</span>
+                        <div class="accessory-counter">
+                            <button class="accessory-btn" onclick="changeAccessory('checkValves', -1)">−</button>
+                            <span class="accessory-count" id="checkValvesCount">1</span>
+                            <button class="accessory-btn" onclick="changeAccessory('checkValves', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="accessory-item">
+                        <span class="accessory-label">Entradas</span>
+                        <div class="accessory-counter">
+                            <button class="accessory-btn" onclick="changeAccessory('entries', -1)">−</button>
+                            <span class="accessory-count" id="entriesCount">1</span>
+                            <button class="accessory-btn" onclick="changeAccessory('entries', 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>K total:</strong> <span id="totalK">4.80</span> |
+                    <strong>L<sub>eq</sub>:</strong> <span id="leqValue">48.0</span> m
+                </div>
+
+                <button class="reset-btn" id="resetBtn">Restablecer Todo</button>
+            </div>
+
+            <!-- =============================================
+                 PANEL CENTRAL - VISUALIZACIÓN
+                 ============================================= -->
+            <div class="visualization-area">
+                <!-- Animación del sistema -->
+                <div class="card canvas-container">
+                    <div class="card-title">Sistema de Bombeo</div>
+                    <canvas id="systemCanvas"></canvas>
+                </div>
+
+                <!-- Curvas características -->
+                <div class="card">
+                    <div class="card-title">Curvas Características</div>
+                    <canvas id="curveCanvas"></canvas>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color pump"></div>
+                            <span>Curva Bomba</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color system"></div>
+                            <span>Curva Sistema</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color point"></div>
+                            <span>Punto Operación</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- =============================================
+                 PANEL DERECHO - BOMBA Y RESULTADOS
+                 ============================================= -->
+            <div class="controls-scroll">
+                <!-- Curva de la bomba -->
+                <div class="card">
+                    <div class="card-title">Curva de la Bomba</div>
+                    <p class="pump-info">H = H₀ - a·Q² (H en m, Q en m³/h)</p>
+
+                    <div class="pump-curve-inputs">
+                        <div class="pump-input">
+                            <label>H₀ (m)</label>
+                            <input type="number" id="pumpH0" value="35" min="5" max="100" step="1">
+                        </div>
+                        <div class="pump-input">
+                            <label>a (m/(m³/h)²)</label>
+                            <input type="number" id="pumpA" value="0.004" min="0.0001" max="0.1" step="0.0001">
+                        </div>
+                        <div class="pump-input">
+                            <label>Q<sub>max</sub> (m³/h)</label>
+                            <input type="number" id="pumpQmax" value="90" min="10" max="500" step="5">
+                        </div>
+                    </div>
+
+                    <div class="section-title" style="margin-top: 1rem;">Rendimiento</div>
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Eficiencia bomba (η)</span>
+                            <span class="control-value" id="efficiencyValue">75%</span>
+                        </div>
+                        <div class="slider-container">
+                            <button class="slider-btn" data-param="efficiency" data-dir="-1">−</button>
+                            <input type="range" id="efficiencySlider" min="40" max="90" value="75" step="1">
+                            <button class="slider-btn" data-param="efficiency" data-dir="1">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resultados -->
+                <div class="card results-panel" style="margin-top: 1rem;">
+                    <div class="card-title">Punto de Operación</div>
+
+                    <div class="status-indicator">
+                        <div class="status-dot running" id="statusDot"></div>
+                        <span id="statusText">Sistema operando</span>
+                    </div>
+
+                    <div class="result-grid" style="margin-top: 0.75rem;">
+                        <div class="result-item highlight">
+                            <span class="result-label">Caudal (Q)</span>
+                            <span class="result-value"><span id="flowValue">45.2</span><span
+                                    class="result-unit">m³/h</span></span>
+                        </div>
+                        <div class="result-item highlight">
+                            <span class="result-label">Altura (H)</span>
+                            <span class="result-value"><span id="headValue">26.8</span><span
+                                    class="result-unit">m</span></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Velocidad (V)</span>
+                            <span class="result-value"><span id="velocityResult">1.60</span><span
+                                    class="result-unit">m/s</span></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Reynolds (Re)</span>
+                            <span class="result-value" id="reynoldsValue">160,000</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Factor fricción (f)</span>
+                            <span class="result-value" id="frictionValue">0.0195</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Régimen</span>
+                            <span class="flow-regime turbulent" id="flowRegime">Turbulento</span>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="section-title">⚡ Pérdidas y Potencia</div>
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <span class="result-label">Pérdidas fricción</span>
+                            <span class="result-value"><span id="frictionLoss">8.5</span><span
+                                    class="result-unit">m</span></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Pérdidas accesorios</span>
+                            <span class="result-value"><span id="accessoryLoss">3.3</span><span
+                                    class="result-unit">m</span></span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Pérdidas totales</span>
+                            <span class="result-value"><span id="totalLoss">11.8</span><span
+                                    class="result-unit">m</span></span>
+                        </div>
+                        <div class="result-item success">
+                            <span class="result-label">Potencia hidráulica</span>
+                            <span class="result-value"><span id="hydraulicPower">3.30</span><span
+                                    class="result-unit">kW</span></span>
+                        </div>
+                        <div class="result-item warning">
+                            <span class="result-label">Potencia motor</span>
+                            <span class="result-value"><span id="motorPower">4.40</span><span
+                                    class="result-unit">kW</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // CONFIGURACIÓN INICIAL Y VARIABLES GLOBALES
+        // =============================================
+
+        const g = 9.81; // Aceleración gravitacional (m/s²)
+        const rhoWater = 1000; // Densidad del agua (kg/m³)
+
+        // Parámetros del sistema
+        let params = {
+            height: 15,        // Desnivel geométrico (m)
+            length: 50,        // Longitud tubería (m)
+            diameter: 100,     // Diámetro (mm)
+            roughness: 0.045,  // Rugosidad (mm)
+            viscosity: 1,      // Viscosidad cinemática (cSt)
+            elbows: 2,         // Codos 90°
+            valves: 1,         // Válvulas de compuerta
+            checkValves: 1,    // Válvulas de retención
+            entries: 1,        // Entradas
+            efficiency: 75     // Rendimiento bomba (%)
+        };
+
+        // Curva de la bomba: H = H0 - a*Q²
+        let pumpCurve = {
+            H0: 35,      // Altura a caudal cero (m)
+            a: 0.004,    // Coeficiente parabólico
+            Qmax: 90     // Caudal máximo (m³/h)
+        };
+
+        // Coeficientes K para accesorios
+        const kValues = {
+            elbows: 0.9,       // Codo 90° estándar
+            valves: 0.2,       // Válvula compuerta abierta
+            checkValves: 2.5,  // Válvula de retención
+            entries: 0.5       // Entrada al depósito
+        };
+
+        // Punto de operación
+        let operatingPoint = { Q: 0, H: 0 };
+
+        // Canvas y contextos
+        const systemCanvas = document.getElementById('systemCanvas');
+        const curveCanvas = document.getElementById('curveCanvas');
+        const systemCtx = systemCanvas.getContext('2d');
+        const curveCtx = curveCanvas.getContext('2d');
+
+        // Partículas para animación
+        let particles = [];
+        const maxParticles = 80;
+
+        // =============================================
+        // FUNCIONES DE CÁLCULO HIDRÁULICO
+        // =============================================
+
+        /**
+         * Calcula el número de Reynolds
+         * Re = V * D / ν
+         */
+        function calculateReynolds(Q_m3h) {
+            const D = params.diameter / 1000; // m
+            const A = Math.PI * D * D / 4;    // m²
+            const Q = Q_m3h / 3600;           // m³/s
+            const V = Q / A;                   // m/s
+            const nu = params.viscosity * 1e-6; // m²/s
+            return (V * D) / nu;
+        }
+
+        /**
+         * Calcula el factor de fricción usando Swamee-Jain
+         * (Aproximación de Colebrook-White)
+         */
+        function calculateFrictionFactor(Re) {
+            if (Re < 2300) {
+                // Flujo laminar
+                return 64 / Re;
+            } else {
+                // Flujo turbulento - Swamee-Jain
+                const D = params.diameter;      // mm
+                const epsilon = params.roughness; // mm
+                const relRoughness = epsilon / D;
+
+                const term1 = relRoughness / 3.7;
+                const term2 = 5.74 / Math.pow(Re, 0.9);
+                return 0.25 / Math.pow(Math.log10(term1 + term2), 2);
+            }
+        }
+
+        /**
+         * Calcula el K total de accesorios
+         */
+        function calculateTotalK() {
+            return params.elbows * kValues.elbows +
+                params.valves * kValues.valves +
+                params.checkValves * kValues.checkValves +
+                params.entries * kValues.entries;
+        }
+
+        /**
+         * Calcula la longitud equivalente de accesorios
+         */
+        function calculateEquivalentLength(f) {
+            const K = calculateTotalK();
+            const D = params.diameter / 1000; // m
+            return (K * D) / f;
+        }
+
+        /**
+         * Calcula la altura del sistema para un caudal dado
+         * H_sistema = H_geométrica + h_fricción + h_accesorios
+         */
+        function calculateSystemHead(Q_m3h) {
+            if (Q_m3h <= 0) return params.height;
+
+            const D = params.diameter / 1000; // m
+            const A = Math.PI * D * D / 4;    // m²
+            const Q = Q_m3h / 3600;           // m³/s
+            const V = Q / A;                   // m/s
+
+            const Re = calculateReynolds(Q_m3h);
+            const f = calculateFrictionFactor(Re);
+            const K = calculateTotalK();
+
+            // Pérdidas por fricción: hf = f * (L/D) * (V²/2g)
+            const hFriction = f * (params.length / D) * (V * V) / (2 * g);
+
+            // Pérdidas por accesorios: hm = K * (V²/2g)
+            const hAccessories = K * (V * V) / (2 * g);
+
+            return params.height + hFriction + hAccessories;
+        }
+
+        /**
+         * Calcula la altura de la bomba para un caudal dado
+         * H_bomba = H0 - a * Q²
+         */
+        function calculatePumpHead(Q_m3h) {
+            return pumpCurve.H0 - pumpCurve.a * Q_m3h * Q_m3h;
+        }
+
+        /**
+         * Encuentra el punto de operación iterativamente
+         * (Intersección curva bomba - curva sistema)
+         */
+        function findOperatingPoint() {
+            let Qlow = 0;
+            let Qhigh = pumpCurve.Qmax;
+            let Q, Hpump, Hsystem;
+
+            // Método de bisección
+            for (let i = 0; i < 50; i++) {
+                Q = (Qlow + Qhigh) / 2;
+                Hpump = calculatePumpHead(Q);
+                Hsystem = calculateSystemHead(Q);
+
+                if (Math.abs(Hpump - Hsystem) < 0.001) break;
+
+                if (Hpump > Hsystem) {
+                    Qlow = Q;
+                } else {
+                    Qhigh = Q;
+                }
+            }
+
+            // Verificar que el punto es válido
+            if (Hpump < 0 || Q < 0 || calculatePumpHead(0) < params.height) {
+                return { Q: 0, H: params.height, valid: false };
+            }
+
+            return { Q: Q, H: Hpump, valid: true };
+        }
+
+        /**
+         * Calcula la potencia hidráulica
+         * P_h = ρ * g * Q * H
+         */
+        function calculateHydraulicPower(Q_m3h, H) {
+            const Q = Q_m3h / 3600; // m³/s
+            return (rhoWater * g * Q * H) / 1000; // kW
+        }
+
+        // =============================================
+        // FUNCIONES DE ACTUALIZACIÓN DE UI
+        // =============================================
+
+        function updateResults() {
+            // Encontrar punto de operación
+            operatingPoint = findOperatingPoint();
+
+            const Q = operatingPoint.Q;
+            const H = operatingPoint.H;
+
+            // Calcular parámetros en el punto de operación
+            const D = params.diameter / 1000;
+            const A = Math.PI * D * D / 4;
+            const Q_m3s = Q / 3600;
+            const V = Q > 0 ? Q_m3s / A : 0;
+
+            const Re = Q > 0 ? calculateReynolds(Q) : 0;
+            const f = Q > 0 ? calculateFrictionFactor(Re) : 0.02;
+            const K = calculateTotalK();
+
+            // Pérdidas
+            const hFriction = Q > 0 ? f * (params.length / D) * (V * V) / (2 * g) : 0;
+            const hAccessories = Q > 0 ? K * (V * V) / (2 * g) : 0;
+            const hTotal = hFriction + hAccessories;
+
+            // Potencia
+            const Ph = calculateHydraulicPower(Q, H);
+            const Pm = Ph / (params.efficiency / 100);
+
+            // Longitud equivalente
+            const Leq = f > 0 ? calculateEquivalentLength(f) : 0;
+
+            // Actualizar valores en pantalla
+            document.getElementById('flowValue').textContent = Q.toFixed(1);
+            document.getElementById('headValue').textContent = H.toFixed(1);
+            document.getElementById('velocityResult').textContent = V.toFixed(2);
+            document.getElementById('reynoldsValue').textContent = Re.toLocaleString('es-ES', { maximumFractionDigits: 0 });
+            document.getElementById('frictionValue').textContent = f.toFixed(4);
+
+            // Régimen de flujo
+            const regimeEl = document.getElementById('flowRegime');
+            if (Re < 2300) {
+                regimeEl.textContent = 'Laminar';
+                regimeEl.className = 'flow-regime laminar';
+            } else if (Re < 4000) {
+                regimeEl.textContent = 'Transición';
+                regimeEl.className = 'flow-regime transition';
+            } else {
+                regimeEl.textContent = 'Turbulento';
+                regimeEl.className = 'flow-regime turbulent';
+            }
+
+            // Pérdidas
+            document.getElementById('frictionLoss').textContent = hFriction.toFixed(2);
+            document.getElementById('accessoryLoss').textContent = hAccessories.toFixed(2);
+            document.getElementById('totalLoss').textContent = hTotal.toFixed(2);
+
+            // Potencia
+            document.getElementById('hydraulicPower').textContent = Ph.toFixed(2);
+            document.getElementById('motorPower').textContent = Pm.toFixed(2);
+
+            // K total y Leq
+            document.getElementById('totalK').textContent = K.toFixed(2);
+            document.getElementById('leqValue').textContent = Leq.toFixed(1);
+
+            // Estado del sistema
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            if (operatingPoint.valid && Q > 0) {
+                statusDot.className = 'status-dot running';
+                statusText.textContent = 'Sistema operando';
+            } else {
+                statusDot.className = 'status-dot stopped';
+                statusText.textContent = 'Bomba insuficiente';
+            }
+        }
+
+        function updateDisplayValues() {
+            document.getElementById('heightValue').textContent = `${params.height} m`;
+            document.getElementById('lengthValue').textContent = `${params.length} m`;
+            document.getElementById('diameterValue').textContent = `${params.diameter} mm`;
+            document.getElementById('roughnessValue').textContent = `${params.roughness.toFixed(3)} mm`;
+            document.getElementById('viscosityValue').textContent = `${params.viscosity.toFixed(1)} cSt`;
+            document.getElementById('efficiencyValue').textContent = `${params.efficiency}%`;
+
+            document.getElementById('elbowsCount').textContent = params.elbows;
+            document.getElementById('valvesCount').textContent = params.valves;
+            document.getElementById('checkValvesCount').textContent = params.checkValves;
+            document.getElementById('entriesCount').textContent = params.entries;
+        }
+
+        // =============================================
+        // FUNCIONES DE DIBUJO - SISTEMA
+        // =============================================
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.t = Math.random(); // Posición en el path (0-1)
+                this.speed = 0.002 + Math.random() * 0.001;
+                this.size = 2 + Math.random() * 2;
+                this.alpha = 0.5 + Math.random() * 0.4;
+                this.offset = (Math.random() - 0.5) * 10;
+            }
+
+            update(flowRate) {
+                if (flowRate <= 0) return;
+                this.t += this.speed * (flowRate / 50);
+                if (this.t > 1) this.t = 0;
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < maxParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function getPathPoint(t, path) {
+            // Interpolación lineal a lo largo del path
+            const totalLength = path.length - 1;
+            const index = t * totalLength;
+            const i = Math.floor(index);
+            const f = index - i;
+
+            if (i >= path.length - 1) return path[path.length - 1];
+
+            return {
+                x: path[i].x + (path[i + 1].x - path[i].x) * f,
+                y: path[i].y + (path[i + 1].y - path[i].y) * f
+            };
+        }
+
+        function drawSystem() {
+            const rect = systemCanvas.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+
+            systemCtx.clearRect(0, 0, width, height);
+
+            // =============================================
+            // CONFIGURACIÓN DE DIMENSIONES
+            // =============================================
+            const margin = { top: 50, right: 60, bottom: 40, left: 40 };
+            const usableWidth = width - margin.left - margin.right;
+            const usableHeight = height - margin.top - margin.bottom;
+
+            // Tamaños de elementos
+            const tankWidth = 70;
+            const tankHeight = 55;
+            const pumpRadius = 28;
+
+            // =============================================
+            // CALCULAR POSICIONES BASADAS EN DESNIVEL
+            // =============================================
+            // El depósito inferior está en la parte baja
+            const lowerTankX = margin.left + 20;
+            const lowerTankY = height - margin.bottom - tankHeight - 10;
+            const lowerTankCenterY = lowerTankY + tankHeight / 2;
+
+            // El depósito superior se posiciona según el desnivel
+            const maxVisualHeight = usableHeight - tankHeight - 20;
+            const heightRatio = Math.min(params.height / 50, 1);
+            const visualHeight = 60 + heightRatio * (maxVisualHeight - 60);
+
+            const upperTankX = width - margin.right - tankWidth - 10;
+            const upperTankY = lowerTankY - visualHeight;
+            const upperTankCenterY = upperTankY + tankHeight / 2;
+
+            // Posición de la bomba
+            const pumpX = lowerTankX + tankWidth + 50;
+            const pumpY = lowerTankCenterY;
+
+            // Punto de subida de la tubería
+            const riserX = pumpX + pumpRadius + 60;
+
+            // =============================================
+            // DIBUJAR FONDO CON GRID SUTIL
+            // =============================================
+            systemCtx.strokeStyle = '#e2e8f0';
+            systemCtx.lineWidth = 1;
+            for (let y = 0; y < height; y += 30) {
+                systemCtx.beginPath();
+                systemCtx.moveTo(0, y);
+                systemCtx.lineTo(width, y);
+                systemCtx.stroke();
+            }
+
+            // =============================================
+            // DIBUJAR TUBERÍA (ANTES QUE OTROS ELEMENTOS)
+            // =============================================
+            const pipeWidth = Math.max(10, Math.min(20, params.diameter / 15));
+
+            // Path completo de la tubería para las partículas
+            const pipePath = [
+                { x: lowerTankX + tankWidth, y: pumpY },
+                { x: pumpX - pumpRadius - 5, y: pumpY },
+                { x: pumpX + pumpRadius + 5, y: pumpY },
+                { x: riserX, y: pumpY },
+                { x: riserX, y: upperTankY + tankHeight },
+                { x: upperTankX, y: upperTankY + tankHeight }
+            ];
+
+            // Gradiente para la tubería de impulsión
+            const totalLoss = operatingPoint.valid ? calculateSystemHead(operatingPoint.Q) - params.height : 0;
+            const lossRatio = Math.min(totalLoss / 15, 1);
+
+            // Tubería de succión (del tanque a la bomba)
+            systemCtx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+            systemCtx.lineWidth = pipeWidth;
+            systemCtx.lineCap = 'round';
+            systemCtx.lineJoin = 'round';
+            systemCtx.beginPath();
+            systemCtx.moveTo(pipePath[0].x, pipePath[0].y);
+            systemCtx.lineTo(pipePath[1].x, pipePath[1].y);
+            systemCtx.stroke();
+
+            // Tubería de impulsión con gradiente
+            const impulsionGradient = systemCtx.createLinearGradient(
+                pipePath[2].x, pipePath[2].y,
+                pipePath[5].x, pipePath[5].y
+            );
+            impulsionGradient.addColorStop(0, 'rgba(59, 130, 246, 0.6)');
+            impulsionGradient.addColorStop(0.3, 'rgba(99, 102, 241, 0.5)');
+            impulsionGradient.addColorStop(0.6, `rgba(168, 85, 247, ${0.4 + lossRatio * 0.2})`);
+            impulsionGradient.addColorStop(1, `rgba(236, 72, 153, ${0.3 + lossRatio * 0.3})`);
+
+            systemCtx.strokeStyle = impulsionGradient;
+            systemCtx.beginPath();
+            systemCtx.moveTo(pipePath[2].x, pipePath[2].y);
+            systemCtx.lineTo(pipePath[3].x, pipePath[3].y);
+            systemCtx.lineTo(pipePath[4].x, pipePath[4].y);
+            systemCtx.lineTo(pipePath[5].x, pipePath[5].y);
+            systemCtx.stroke();
+
+            // Borde de la tubería para dar profundidad
+            systemCtx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+            systemCtx.lineWidth = pipeWidth + 2;
+            systemCtx.beginPath();
+            systemCtx.moveTo(pipePath[0].x, pipePath[0].y);
+            for (let i = 1; i < pipePath.length; i++) {
+                if (i === 2) continue; // Saltar el punto dentro de la bomba
+                systemCtx.lineTo(pipePath[i].x, pipePath[i].y);
+            }
+            systemCtx.stroke();
+
+            // =============================================
+            // DIBUJAR ACCESORIOS
+            // =============================================
+            // Válvula de retención (cerca de la bomba)
+            if (params.checkValves > 0) {
+                const cvX = pumpX + pumpRadius + 30;
+                drawCheckValve(systemCtx, cvX, pumpY, pipeWidth);
+            }
+
+            // Codo inferior
+            if (params.elbows > 0) {
+                drawElbow(systemCtx, riserX, pumpY, pipeWidth, -90);
+            }
+
+            // Codo superior
+            if (params.elbows > 1) {
+                drawElbow(systemCtx, riserX, upperTankY + tankHeight, pipeWidth, 180);
+            }
+
+            // Válvula de compuerta (en la tubería horizontal superior)
+            if (params.valves > 0) {
+                const vX = riserX + (upperTankX - riserX) / 2;
+                const vY = upperTankY + tankHeight;
+                drawGateValve(systemCtx, vX, vY, pipeWidth);
+            }
+
+            // =============================================
+            // DIBUJAR DEPÓSITO INFERIOR
+            // =============================================
+            // Agua
+            const waterLevel = 0.75;
+            systemCtx.fillStyle = 'rgba(59, 130, 246, 0.35)';
+            systemCtx.fillRect(
+                lowerTankX + 2,
+                lowerTankY + tankHeight * (1 - waterLevel),
+                tankWidth - 4,
+                tankHeight * waterLevel - 2
+            );
+
+            // Ondas en el agua
+            systemCtx.strokeStyle = 'rgba(147, 197, 253, 0.3)';
+            systemCtx.lineWidth = 1;
+            const waveY = lowerTankY + tankHeight * (1 - waterLevel);
+            systemCtx.beginPath();
+            for (let x = lowerTankX + 5; x < lowerTankX + tankWidth - 5; x += 2) {
+                const y = waveY + Math.sin((x + Date.now() * 0.002) * 0.2) * 2;
+                if (x === lowerTankX + 5) systemCtx.moveTo(x, y);
+                else systemCtx.lineTo(x, y);
+            }
+            systemCtx.stroke();
+
+            // Tanque
+            systemCtx.strokeStyle = '#2d3748';
+            systemCtx.lineWidth = 2.5;
+            systemCtx.strokeRect(lowerTankX, lowerTankY, tankWidth, tankHeight);
+
+            // Etiqueta
+            systemCtx.fillStyle = '#cbd5e1';
+            systemCtx.font = 'bold 10px system-ui';
+            systemCtx.textAlign = 'center';
+            systemCtx.fillText('DEPÓSITO INFERIOR', lowerTankX + tankWidth / 2, lowerTankY + tankHeight + 18);
+
+            // =============================================
+            // DIBUJAR DEPÓSITO SUPERIOR
+            // =============================================
+            // Agua
+            systemCtx.fillStyle = 'rgba(59, 130, 246, 0.35)';
+            systemCtx.fillRect(
+                upperTankX + 2,
+                upperTankY + tankHeight * 0.4,
+                tankWidth - 4,
+                tankHeight * 0.6 - 2
+            );
+
+            // Ondas
+            const waveY2 = upperTankY + tankHeight * 0.4;
+            systemCtx.beginPath();
+            for (let x = upperTankX + 5; x < upperTankX + tankWidth - 5; x += 2) {
+                const y = waveY2 + Math.sin((x + Date.now() * 0.002) * 0.2) * 2;
+                if (x === upperTankX + 5) systemCtx.moveTo(x, y);
+                else systemCtx.lineTo(x, y);
+            }
+            systemCtx.stroke();
+
+            // Tanque
+            systemCtx.strokeStyle = '#2d3748';
+            systemCtx.lineWidth = 2.5;
+            systemCtx.strokeRect(upperTankX, upperTankY, tankWidth, tankHeight);
+
+            // Etiqueta
+            systemCtx.fillStyle = '#cbd5e1';
+            systemCtx.fillText('DEPÓSITO SUPERIOR', upperTankX + tankWidth / 2, upperTankY - 10);
+
+            // =============================================
+            // DIBUJAR BOMBA
+            // =============================================
+            // Círculo exterior
+            const pumpGradient = systemCtx.createRadialGradient(pumpX, pumpY, 0, pumpX, pumpY, pumpRadius);
+            pumpGradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+            pumpGradient.addColorStop(0.7, 'rgba(59, 130, 246, 0.15)');
+            pumpGradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+
+            systemCtx.beginPath();
+            systemCtx.arc(pumpX, pumpY, pumpRadius, 0, Math.PI * 2);
+            systemCtx.fillStyle = pumpGradient;
+            systemCtx.fill();
+            systemCtx.strokeStyle = '#3b82f6';
+            systemCtx.lineWidth = 2.5;
+            systemCtx.stroke();
+
+            // Símbolo de bomba (triángulo)
+            systemCtx.beginPath();
+            systemCtx.moveTo(pumpX - 10, pumpY - 12);
+            systemCtx.lineTo(pumpX - 10, pumpY + 12);
+            systemCtx.lineTo(pumpX + 12, pumpY);
+            systemCtx.closePath();
+            systemCtx.fillStyle = '#3b82f6';
+            systemCtx.fill();
+
+            // Etiqueta
+            systemCtx.fillStyle = '#cbd5e1';
+            systemCtx.font = 'bold 10px system-ui';
+            systemCtx.fillText('BOMBA', pumpX, pumpY + pumpRadius + 18);
+
+            // =============================================
+            // DIBUJAR PARTÍCULAS
+            // =============================================
+            if (operatingPoint.valid && operatingPoint.Q > 0) {
+                particles.forEach(p => {
+                    p.update(operatingPoint.Q);
+                    const pos = getPathPoint(p.t, pipePath);
+
+                    // Color según posición
+                    let r, g, b;
+                    if (p.t < 0.25) {
+                        r = 59; g = 130; b = 246;
+                    } else if (p.t < 0.5) {
+                        r = 99; g = 102; b = 241;
+                    } else if (p.t < 0.75) {
+                        r = 168; g = 85; b = 247;
+                    } else {
+                        r = 236; g = 72; b = 153;
+                    }
+
+                    systemCtx.beginPath();
+                    systemCtx.arc(pos.x, pos.y + p.offset * 0.2, p.size, 0, Math.PI * 2);
+                    systemCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${p.alpha})`;
+                    systemCtx.fill();
+                });
+            }
+
+            // =============================================
+            // DIBUJAR INDICADOR DE DESNIVEL
+            // =============================================
+            const indicatorX = width - 35;
+            const indicatorTop = upperTankCenterY;
+            const indicatorBottom = lowerTankCenterY;
+
+            // Línea de desnivel
+            systemCtx.strokeStyle = '#d69e2e';
+            systemCtx.lineWidth = 2;
+            systemCtx.setLineDash([6, 4]);
+            systemCtx.beginPath();
+            systemCtx.moveTo(indicatorX, indicatorBottom);
+            systemCtx.lineTo(indicatorX, indicatorTop);
+            systemCtx.stroke();
+            systemCtx.setLineDash([]);
+
+            // Marcas horizontales
+            systemCtx.beginPath();
+            systemCtx.moveTo(indicatorX - 8, indicatorBottom);
+            systemCtx.lineTo(indicatorX + 8, indicatorBottom);
+            systemCtx.moveTo(indicatorX - 8, indicatorTop);
+            systemCtx.lineTo(indicatorX + 8, indicatorTop);
+            systemCtx.stroke();
+
+            // Flechas
+            systemCtx.fillStyle = '#d69e2e';
+            // Flecha arriba
+            systemCtx.beginPath();
+            systemCtx.moveTo(indicatorX, indicatorTop);
+            systemCtx.lineTo(indicatorX - 5, indicatorTop + 10);
+            systemCtx.lineTo(indicatorX + 5, indicatorTop + 10);
+            systemCtx.closePath();
+            systemCtx.fill();
+            // Flecha abajo
+            systemCtx.beginPath();
+            systemCtx.moveTo(indicatorX, indicatorBottom);
+            systemCtx.lineTo(indicatorX - 5, indicatorBottom - 10);
+            systemCtx.lineTo(indicatorX + 5, indicatorBottom - 10);
+            systemCtx.closePath();
+            systemCtx.fill();
+
+            // Etiqueta de desnivel (a la derecha de la línea para evitar superposición)
+            systemCtx.fillStyle = '#d69e2e';
+            systemCtx.font = 'bold 11px system-ui';
+            systemCtx.textAlign = 'left';
+            const labelY = (indicatorTop + indicatorBottom) / 2;
+            systemCtx.fillText(`Hg =`, indicatorX - 45, labelY - 6);
+            systemCtx.fillText(`${params.height} m`, indicatorX - 45, labelY + 10);
+
+            // =============================================
+            // PANEL DE INFORMACIÓN
+            // =============================================
+            // Fondo del panel
+            systemCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            systemCtx.fillRect(10, 10, 140, 50);
+            systemCtx.strokeStyle = '#cbd5e1';
+            systemCtx.lineWidth = 1;
+            systemCtx.strokeRect(10, 10, 140, 50);
+
+            // Texto del panel
+            systemCtx.fillStyle = '#4a5568';
+            systemCtx.font = '11px system-ui';
+            systemCtx.textAlign = 'left';
+            systemCtx.fillText(`Longitud: ${params.length} m`, 20, 30);
+            systemCtx.fillText(`Diámetro: ${params.diameter} mm`, 20, 48);
+        }
+
+        function drawElbow(ctx, x, y, size, rotation) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(rotation * Math.PI / 180);
+
+            // Arco del codo
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.6, 0, Math.PI / 2);
+            ctx.stroke();
+
+            // Punto central
+            ctx.fillStyle = '#fbbf24';
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawGateValve(ctx, x, y, size) {
+            // Cuerpo de la válvula (mariposa)
+            ctx.fillStyle = 'rgba(236, 72, 153, 0.6)';
+            ctx.strokeStyle = '#ec4899';
+            ctx.lineWidth = 2;
+
+            // Triángulos
+            ctx.beginPath();
+            ctx.moveTo(x - size * 0.4, y - size * 0.8);
+            ctx.lineTo(x + size * 0.4, y);
+            ctx.lineTo(x - size * 0.4, y + size * 0.8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.4, y - size * 0.8);
+            ctx.lineTo(x - size * 0.4, y);
+            ctx.lineTo(x + size * 0.4, y + size * 0.8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Vástago
+            ctx.beginPath();
+            ctx.moveTo(x, y - size * 0.8);
+            ctx.lineTo(x, y - size * 1.3);
+            ctx.stroke();
+
+            // Volante
+            ctx.beginPath();
+            ctx.arc(x, y - size * 1.4, size * 0.25, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function drawCheckValve(ctx, x, y, size) {
+            // Círculo exterior
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, size * 0.5, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Flecha de dirección
+            ctx.fillStyle = '#4ade80';
+            ctx.beginPath();
+            ctx.moveTo(x - size * 0.25, y - size * 0.15);
+            ctx.lineTo(x + size * 0.15, y);
+            ctx.lineTo(x - size * 0.25, y + size * 0.15);
+            ctx.closePath();
+            ctx.fill();
+
+            // Línea vertical (clapeta)
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x + size * 0.15, y - size * 0.3);
+            ctx.lineTo(x + size * 0.15, y + size * 0.3);
+            ctx.stroke();
+        }
+
+        // =============================================
+        // FUNCIONES DE DIBUJO - CURVAS
+        // =============================================
+
+        function drawCurves() {
+            const rect = curveCanvas.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+
+            curveCtx.clearRect(0, 0, width, height);
+
+            // Márgenes del gráfico
+            const margin = { top: 30, right: 30, bottom: 45, left: 55 };
+            const chartWidth = width - margin.left - margin.right;
+            const chartHeight = height - margin.top - margin.bottom;
+
+            // Escalas
+            const maxQ = pumpCurve.Qmax * 1.1;
+            const maxH = pumpCurve.H0 * 1.2;
+
+            const scaleX = chartWidth / maxQ;
+            const scaleY = chartHeight / maxH;
+
+            // Función para convertir coordenadas
+            const toCanvasX = (q) => margin.left + q * scaleX;
+            const toCanvasY = (h) => margin.top + chartHeight - h * scaleY;
+
+            // =============================================
+            // DIBUJAR GRID
+            // =============================================
+            curveCtx.strokeStyle = '#e2e8f0';
+            curveCtx.lineWidth = 1;
+
+            // Líneas verticales
+            for (let q = 0; q <= maxQ; q += 10) {
+                curveCtx.beginPath();
+                curveCtx.moveTo(toCanvasX(q), margin.top);
+                curveCtx.lineTo(toCanvasX(q), margin.top + chartHeight);
+                curveCtx.stroke();
+            }
+
+            // Líneas horizontales
+            for (let h = 0; h <= maxH; h += 5) {
+                curveCtx.beginPath();
+                curveCtx.moveTo(margin.left, toCanvasY(h));
+                curveCtx.lineTo(margin.left + chartWidth, toCanvasY(h));
+                curveCtx.stroke();
+            }
+
+            // =============================================
+            // DIBUJAR EJES
+            // =============================================
+            curveCtx.strokeStyle = '#cbd5e1';
+            curveCtx.lineWidth = 2;
+
+            // Eje X
+            curveCtx.beginPath();
+            curveCtx.moveTo(margin.left, margin.top + chartHeight);
+            curveCtx.lineTo(margin.left + chartWidth, margin.top + chartHeight);
+            curveCtx.stroke();
+
+            // Eje Y
+            curveCtx.beginPath();
+            curveCtx.moveTo(margin.left, margin.top);
+            curveCtx.lineTo(margin.left, margin.top + chartHeight);
+            curveCtx.stroke();
+
+            // Etiquetas de ejes
+            curveCtx.fillStyle = '#4a5568';
+            curveCtx.font = '11px system-ui';
+            curveCtx.textAlign = 'center';
+            curveCtx.fillText('Caudal Q (m³/h)', margin.left + chartWidth / 2, height - 8);
+
+            curveCtx.save();
+            curveCtx.translate(15, margin.top + chartHeight / 2);
+            curveCtx.rotate(-Math.PI / 2);
+            curveCtx.fillText('Altura H (m)', 0, 0);
+            curveCtx.restore();
+
+            // Valores en ejes
+            curveCtx.font = '9px system-ui';
+            curveCtx.fillStyle = '#718096';
+
+            // Valores X
+            curveCtx.textAlign = 'center';
+            for (let q = 0; q <= maxQ; q += 20) {
+                curveCtx.fillText(q.toString(), toCanvasX(q), margin.top + chartHeight + 15);
+            }
+
+            // Valores Y
+            curveCtx.textAlign = 'right';
+            for (let h = 0; h <= maxH; h += 10) {
+                curveCtx.fillText(h.toString(), margin.left - 8, toCanvasY(h) + 3);
+            }
+
+            // =============================================
+            // DIBUJAR CURVA DEL SISTEMA
+            // =============================================
+            curveCtx.strokeStyle = '#ef4444';
+            curveCtx.lineWidth = 2.5;
+            curveCtx.beginPath();
+
+            for (let q = 0; q <= maxQ; q += 0.5) {
+                const h = calculateSystemHead(q);
+                const x = toCanvasX(q);
+                const y = toCanvasY(h);
+
+                if (q === 0) {
+                    curveCtx.moveTo(x, y);
+                } else {
+                    curveCtx.lineTo(x, y);
+                }
+            }
+            curveCtx.stroke();
+
+            // =============================================
+            // DIBUJAR CURVA DE LA BOMBA
+            // =============================================
+            curveCtx.strokeStyle = '#3b82f6';
+            curveCtx.lineWidth = 2.5;
+            curveCtx.beginPath();
+
+            for (let q = 0; q <= pumpCurve.Qmax; q += 0.5) {
+                const h = calculatePumpHead(q);
+                if (h < 0) break;
+
+                const x = toCanvasX(q);
+                const y = toCanvasY(h);
+
+                if (q === 0) {
+                    curveCtx.moveTo(x, y);
+                } else {
+                    curveCtx.lineTo(x, y);
+                }
+            }
+            curveCtx.stroke();
+
+            // =============================================
+            // DIBUJAR PUNTO DE OPERACIÓN
+            // =============================================
+            if (operatingPoint.valid && operatingPoint.Q > 0) {
+                const opX = toCanvasX(operatingPoint.Q);
+                const opY = toCanvasY(operatingPoint.H);
+
+                // Líneas de referencia
+                curveCtx.strokeStyle = 'rgba(214, 158, 46, 0.5)';
+                curveCtx.lineWidth = 1;
+                curveCtx.setLineDash([5, 5]);
+
+                curveCtx.beginPath();
+                curveCtx.moveTo(opX, opY);
+                curveCtx.lineTo(opX, margin.top + chartHeight);
+                curveCtx.stroke();
+
+                curveCtx.beginPath();
+                curveCtx.moveTo(opX, opY);
+                curveCtx.lineTo(margin.left, opY);
+                curveCtx.stroke();
+
+                curveCtx.setLineDash([]);
+
+                // Punto
+                curveCtx.beginPath();
+                curveCtx.arc(opX, opY, 8, 0, Math.PI * 2);
+                curveCtx.fillStyle = '#d69e2e';
+                curveCtx.fill();
+                curveCtx.strokeStyle = '#b7791f';
+                curveCtx.lineWidth = 2;
+                curveCtx.stroke();
+
+                // Etiqueta del punto
+                curveCtx.fillStyle = '#d69e2e';
+                curveCtx.font = 'bold 10px system-ui';
+                curveCtx.textAlign = 'left';
+                curveCtx.fillText(
+                    `(${operatingPoint.Q.toFixed(1)}, ${operatingPoint.H.toFixed(1)})`,
+                    opX + 12,
+                    opY - 5
+                );
+            }
+
+            // =============================================
+            // DIBUJAR LÍNEA DE ALTURA GEOMÉTRICA
+            // =============================================
+            curveCtx.strokeStyle = '#cbd5e1';
+            curveCtx.lineWidth = 1;
+            curveCtx.setLineDash([3, 3]);
+
+            curveCtx.beginPath();
+            curveCtx.moveTo(margin.left, toCanvasY(params.height));
+            curveCtx.lineTo(margin.left + chartWidth, toCanvasY(params.height));
+            curveCtx.stroke();
+            curveCtx.setLineDash([]);
+
+            curveCtx.fillStyle = '#718096';
+            curveCtx.font = '9px system-ui';
+            curveCtx.textAlign = 'left';
+            curveCtx.fillText(`Hg = ${params.height}m`, margin.left + 5, toCanvasY(params.height) - 5);
+        }
+
+        // =============================================
+        // CONFIGURACIÓN DE CANVAS
+        // =============================================
+
+        function setupCanvas(canvas, ctx) {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+
+        function resizeCanvases() {
+            setupCanvas(systemCanvas, systemCtx);
+            setupCanvas(curveCanvas, curveCtx);
+            initParticles();
+        }
+
+        // =============================================
+        // LOOP DE ANIMACIÓN
+        // =============================================
+
+        function animate() {
+            drawSystem();
+            drawCurves();
+            requestAnimationFrame(animate);
+        }
+
+        // =============================================
+        // EVENT LISTENERS
+        // =============================================
+
+        function setupEventListeners() {
+            // Sliders principales
+            const sliders = {
+                height: document.getElementById('heightSlider'),
+                length: document.getElementById('lengthSlider'),
+                diameter: document.getElementById('diameterSlider'),
+                roughness: document.getElementById('roughnessSlider'),
+                viscosity: document.getElementById('viscositySlider'),
+                efficiency: document.getElementById('efficiencySlider')
+            };
+
+            Object.entries(sliders).forEach(([param, slider]) => {
+                slider.addEventListener('input', () => {
+                    params[param] = parseFloat(slider.value);
+                    updateDisplayValues();
+                    updateResults();
+                });
+            });
+
+            // Botones +/-
+            document.querySelectorAll('.slider-btn[data-param]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const param = btn.dataset.param;
+                    const dir = parseInt(btn.dataset.dir);
+                    const slider = sliders[param];
+                    const step = parseFloat(slider.step);
+                    const newValue = Math.max(
+                        parseFloat(slider.min),
+                        Math.min(parseFloat(slider.max), parseFloat(slider.value) + step * dir)
+                    );
+                    slider.value = newValue;
+                    slider.dispatchEvent(new Event('input'));
+                });
+            });
+
+            // Inputs de curva de bomba
+            document.getElementById('pumpH0').addEventListener('change', (e) => {
+                pumpCurve.H0 = parseFloat(e.target.value) || 35;
+                updateResults();
+            });
+
+            document.getElementById('pumpA').addEventListener('change', (e) => {
+                pumpCurve.a = parseFloat(e.target.value) || 0.004;
+                updateResults();
+            });
+
+            document.getElementById('pumpQmax').addEventListener('change', (e) => {
+                pumpCurve.Qmax = parseFloat(e.target.value) || 90;
+                updateResults();
+            });
+
+            // Botón reset
+            document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+            // Resize
+            window.addEventListener('resize', () => {
+                resizeCanvases();
+                updateResults();
+            });
+        }
+
+        function changeAccessory(type, delta) {
+            params[type] = Math.max(0, Math.min(10, params[type] + delta));
+            document.getElementById(type + 'Count').textContent = params[type];
+            updateResults();
+        }
+
+        function resetAll() {
+            params = {
+                height: 15,
+                length: 50,
+                diameter: 100,
+                roughness: 0.045,
+                viscosity: 1,
+                elbows: 2,
+                valves: 1,
+                checkValves: 1,
+                entries: 1,
+                efficiency: 75
+            };
+
+            pumpCurve = {
+                H0: 35,
+                a: 0.004,
+                Qmax: 90
+            };
+
+            // Actualizar sliders
+            document.getElementById('heightSlider').value = 15;
+            document.getElementById('lengthSlider').value = 50;
+            document.getElementById('diameterSlider').value = 100;
+            document.getElementById('roughnessSlider').value = 0.045;
+            document.getElementById('viscositySlider').value = 1;
+            document.getElementById('efficiencySlider').value = 75;
+
+            // Actualizar inputs de bomba
+            document.getElementById('pumpH0').value = 35;
+            document.getElementById('pumpA').value = 0.004;
+            document.getElementById('pumpQmax').value = 90;
+
+            updateDisplayValues();
+            updateResults();
+        }
+
+        // =============================================
+        // INICIALIZACIÓN
+        // =============================================
+
+        window.addEventListener('load', () => {
+            resizeCanvases();
+            setupEventListeners();
+            updateDisplayValues();
+            updateResults();
+            initParticles();
+            animate();
+        });
+    </script>
+</body>
+
+</html>

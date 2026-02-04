@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placa en Movimiento Constante - Santiago Domínguez UCA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #424c75 0%, #764ba2 100%);
+            color: #2d3748;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .watermark-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('logo_UCA.png');
+            background-repeat: repeat;
+            background-size: 300px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+        }
+
+        .author {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #2d3748;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .canvas-wrapper {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        canvas {
+            width: 100%;
+            height: 550px;
+            display: block;
+            border-radius: 4px;
+        }
+
+        .time-display {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .legend {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .legend-line {
+            width: 30px;
+            height: 2px;
+            border-radius: 1px;
+        }
+
+        .legend-line.analitica {
+            background: #3b82f6;
+        }
+
+        .legend-line.numerica {
+            background: #ef4444;
+        }
+
+        .legend-line.vectores {
+            background: #10b981;
+        }
+
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .control-group {
+            margin-bottom: 1rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .control-value {
+            font-family: 'Courier New', monospace;
+            color: #2d3748;
+            font-size: 0.9rem;
+            background: #f7fafc;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #64748b;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-btn {
+            width: 28px;
+            height: 28px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            color: #475569;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .slider-btn:hover {
+            background: #e2e8f0;
+            border-color: #94a3b8;
+        }
+
+        .controls-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.35);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .error-display {
+            background: #f0fff4;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #68d391;
+            text-align: center;
+        }
+
+        .error-display.high-error {
+            background: #fff5f5;
+            border-color: #fc8181;
+        }
+
+        .error-label {
+            font-size: 0.85rem;
+            color: #4a5568;
+            margin-bottom: 0.3rem;
+        }
+
+        .error-value {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            color: #2f855a;
+            font-weight: 600;
+        }
+
+        .error-display.high-error .error-value {
+            color: #c53030;
+        }
+
+        .warning-text {
+            color: #c53030;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .tip-box {
+            background: #ebf8ff;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border-left: 3px solid #63b3ed;
+            margin-top: 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #2c5282;
+        }
+
+        .info-panel {
+            grid-column: 1 / -1;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem;
+        }
+
+        .info-title {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .info-text {
+            color: #4a5568;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .equation {
+            background: #f7fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            border-left: 3px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            color: #2d3748;
+        }
+
+        .equation-title {
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        }
+
+        @media (max-width: 1400px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            canvas {
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            canvas {
+                height: 400px;
+            }
+
+            .controls-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <body>
+        <div class="watermark-pattern"></div>
+        <a href="index.html" class="back-button">Volver al Inicio</a>
+
+        <div class="container">
+            <header>
+                <h1>Placa en Movimiento Constante</h1>
+                <div class="subtitle">Primer Problema de Stokes</div>
+                <div class="author">Santiago Domínguez · Universidad de Cádiz</div>
+            </header>
+
+            <div class="main-layout">
+                <div class="card">
+                    <h2 class="card-title">Evolución del Perfil de Velocidades</h2>
+                    <div class="canvas-wrapper">
+                        <div class="time-display" id="timeDisplay">t = 0.0000 s</div>
+                        <canvas id="canvas"></canvas>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-line analitica"></div>
+                            <span>Solución Analítica</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line numerica"></div>
+                            <span>Solución Numérica</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line vectores"></div>
+                            <span>Vectores de Velocidad</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls-panel">
+                    <div class="card">
+                        <h2 class="card-title">Parámetros de Control</h2>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Velocidad de la Placa (v)</span>
+                                <span class="control-value" id="velocidadValue">3.0 m/s</span>
+                            </div>
+                            <div class="slider-container">
+                                <button class="slider-btn" id="velocidadDown">−</button>
+                                <input type="range" id="velocidadSlider" min="0.5" max="10" step="0.1" value="3.0">
+                                <button class="slider-btn" id="velocidadUp">+</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Viscosidad Cinemática (ν)</span>
+                                <span class="control-value" id="viscosidadValue">0.10 m²/s</span>
+                            </div>
+                            <div class="slider-container">
+                                <button class="slider-btn" id="viscosidadDown">−</button>
+                                <input type="range" id="viscosidadSlider" min="0.01" max="0.5" step="0.01" value="0.1">
+                                <button class="slider-btn" id="viscosidadUp">+</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Paso Espacial (Δy)</span>
+                                <span class="control-value" id="dyValue">0.020 m</span>
+                            </div>
+                            <div class="slider-container">
+                                <button class="slider-btn" id="dyDown">−</button>
+                                <input type="range" id="dySlider" min="0.005" max="0.1" step="0.005" value="0.02">
+                                <button class="slider-btn" id="dyUp">+</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Paso Temporal (Δt)</span>
+                                <span class="control-value" id="dtValue">0.0020 s</span>
+                            </div>
+                            <div class="slider-container">
+                                <button class="slider-btn" id="dtDown">−</button>
+                                <input type="range" id="dtSlider" min="0.0005" max="0.02" step="0.0005" value="0.002">
+                                <button class="slider-btn" id="dtUp">+</button>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>Altura Máxima (y<sub>max</sub>)</span>
+                                <span class="control-value" id="alturaValue">1.5 m</span>
+                            </div>
+                            <div class="slider-container">
+                                <button class="slider-btn" id="alturaDown">−</button>
+                                <input type="range" id="alturaSlider" min="0.5" max="5" step="0.1" value="1.5">
+                                <button class="slider-btn" id="alturaUp">+</button>
+                            </div>
+                        </div>
+
+                        <div class="controls-buttons">
+                            <button class="btn" id="btnPlay">▶ Iniciar</button>
+                            <button class="btn" id="btnPause" disabled>⏸ Pausar</button>
+                            <button class="btn" id="btnStep">⏭ Paso</button>
+                            <button class="btn" id="btnReset">↻ Reiniciar</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Error de Aproximación</h2>
+                        <div class="error-display" id="errorDisplay">
+                            <div class="error-label">Error RMS (Analítica vs Numérica)</div>
+                            <div class="error-value">0.000000</div>
+                            <div class="warning-text" id="stabilityWarning">⚠ Inestabilidad Numérica (r > 0.5)</div>
+                        </div>
+                        <div class="tip-box">
+                            <strong>💡 Experimenta:</strong> Aumenta Δy o Δt para ver cómo crece el error.
+                            Reduce la viscosidad ν para observar una difusión más lenta.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3 class="info-title">📐 Fundamento Teórico</h3>
+
+                    <p class="info-text">
+                        El <strong>Primer Problema de Stokes</strong> (también conocido como problema de Rayleigh)
+                        describe el flujo unidimensional de un fluido viscoso incompresible sobre una placa plana
+                        que se pone en movimiento repentino con velocidad constante.
+                    </p>
+
+                    <div class="equation">
+                        <div class="equation-title">Solución Analítica</div>
+                        u(y,t) = v · erfc(y / (2√(νt)))
+                    </div>
+
+                    <div class="equation">
+                        <div class="equation-title">Solución Numérica (Diferencias Finitas)</div>
+                        u<sub>i</sub><sup>n+1</sup> = u<sub>i</sub><sup>n</sup> + r(u<sub>i+1</sub><sup>n</sup> -
+                        2u<sub>i</sub><sup>n</sup> + u<sub>i-1</sub><sup>n</sup>)
+                        <br>donde r = νΔt/Δy²
+                    </div>
+
+                    <p class="info-text">
+                        <strong>Características del problema:</strong>
+                    </p>
+                    <ul style="color: #4a5568; line-height: 1.7; margin-left: 1.5rem; font-size: 1rem;">
+                        <li>La función error complementaria (erfc) proporciona la solución exacta</li>
+                        <li>El perfil de velocidad difunde hacia arriba con el tiempo</li>
+                        <li>La capa límite viscosa crece como δ ∝ √(νt)</li>
+                        <li>El método numérico es estable si r ≤ 0.5 (condición CFL)</li>
+                        <li>El error RMS mide la diferencia entre la solución analítica y numérica</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function erf(x) {
+                const sign = x >= 0 ? 1 : -1;
+                x = Math.abs(x);
+
+                const a1 = 0.254829592;
+                const a2 = -0.284496736;
+                const a3 = 1.421413741;
+                const a4 = -1.453152027;
+                const a5 = 1.061405429;
+                const p = 0.3275911;
+
+                const t = 1.0 / (1.0 + p * x);
+                const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+                return sign * y;
+            }
+
+            function erfc(x) {
+                return 1 - erf(x);
+            }
+
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * window.devicePixelRatio;
+                canvas.height = rect.height * window.devicePixelRatio;
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            let parametros = {
+                velocidad: 3.0,
+                viscosidad: 0.1,
+                dy: 0.02,
+                dt: 0.002,
+                alturaMaxima: 1.5
+            };
+
+            let tiempo = 0;
+            let reproduciendo = false;
+            let animationId = null;
+            let u_num = [];
+
+            const sliders = {
+                velocidad: document.getElementById('velocidadSlider'),
+                viscosidad: document.getElementById('viscosidadSlider'),
+                dy: document.getElementById('dySlider'),
+                dt: document.getElementById('dtSlider'),
+                altura: document.getElementById('alturaSlider')
+            };
+
+            const valores = {
+                velocidad: document.getElementById('velocidadValue'),
+                viscosidad: document.getElementById('viscosidadValue'),
+                dy: document.getElementById('dyValue'),
+                dt: document.getElementById('dtValue'),
+                altura: document.getElementById('alturaValue'),
+                tiempo: document.getElementById('timeDisplay')
+            };
+
+            const botones = {
+                play: document.getElementById('btnPlay'),
+                pause: document.getElementById('btnPause'),
+                reset: document.getElementById('btnReset'),
+                step: document.getElementById('btnStep')
+            };
+
+            const errorDisplay = document.getElementById('errorDisplay');
+
+            const sliderButtons = {
+                velocidad: { down: 'velocidadDown', up: 'velocidadUp', slider: sliders.velocidad },
+                viscosidad: { down: 'viscosidadDown', up: 'viscosidadUp', slider: sliders.viscosidad },
+                dy: { down: 'dyDown', up: 'dyUp', slider: sliders.dy },
+                dt: { down: 'dtDown', up: 'dtUp', slider: sliders.dt },
+                altura: { down: 'alturaDown', up: 'alturaUp', slider: sliders.altura }
+            };
+
+            function inicializar() {
+                tiempo = 0;
+                const n = Math.floor(parametros.alturaMaxima / parametros.dy) + 1;
+                u_num = new Array(n).fill(0);
+                u_num = new Array(n).fill(0);
+                u_num[0] = parametros.velocidad;
+
+                // Check stability and update UI
+                checkStability();
+            }
+
+            function checkStability() {
+                const r = parametros.viscosidad * parametros.dt / (parametros.dy * parametros.dy);
+                const warningEl = document.getElementById('stabilityWarning');
+                if (r > 0.5) {
+                    warningEl.style.display = 'block';
+                    errorDisplay.classList.add('high-error');
+                } else {
+                    warningEl.style.display = 'none';
+                    if (parseFloat(errorDisplay.querySelector('.error-value').textContent) < 0.01) {
+                        errorDisplay.classList.remove('high-error');
+                    }
+                }
+            }
+
+            function solucionAnalitica(y, t) {
+                if (t <= 0) return 0;
+                const z = y / (2 * Math.sqrt(parametros.viscosidad * t));
+                return parametros.velocidad * erfc(z);
+            }
+
+            function actualizarNumerica() {
+                const n = u_num.length;
+                const r = parametros.viscosidad * parametros.dt / (parametros.dy * parametros.dy);
+
+                const u_new = new Array(n);
+                u_new[0] = parametros.velocidad;
+
+                for (let i = 1; i < n - 1; i++) {
+                    u_new[i] = u_num[i] + r * (u_num[i + 1] - 2 * u_num[i] + u_num[i - 1]);
+                }
+
+                u_new[n - 1] = 0;
+
+                u_num = u_new;
+                u_num = u_new;
+                tiempo += parametros.dt;
+
+                checkStability();
+            }
+
+            function calcularErrorRMS() {
+                if (tiempo <= 0) return 0;
+                let sumError = 0;
+                let count = 0;
+
+                for (let i = 0; i < u_num.length; i++) {
+                    const y = i * parametros.dy;
+                    const u_ana = solucionAnalitica(y, tiempo);
+                    const error = u_num[i] - u_ana;
+                    sumError += error * error;
+                    count++;
+                }
+
+                return Math.sqrt(sumError / count);
+            }
+
+            function dibujar() {
+                const width = canvas.width / window.devicePixelRatio;
+                const height = canvas.height / window.devicePixelRatio;
+                const origenX = width * 0.15;
+                const origenY = height - 80;
+                const escalaX = width * 0.2;
+                const escalaY = (origenY - 60) / parametros.alturaMaxima;
+
+                ctx.clearRect(0, 0, width, height);
+
+                // Fondo blanco limpio
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, height);
+
+                // Cuadrícula sutil gris claro
+                ctx.strokeStyle = 'rgba(203, 213, 225, 0.5)';
+                ctx.lineWidth = 1;
+                for (let x = 0; x < width; x += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, height);
+                    ctx.stroke();
+                }
+                for (let y = 0; y < height; y += 40) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(width, y);
+                    ctx.stroke();
+                }
+
+                // Placa (barra horizontal en la base) - más visible
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(0, origenY - 4, width, 8);
+
+                // Ejes - color más oscuro para fondo blanco
+                ctx.strokeStyle = '#334155';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(origenX, origenY);
+                ctx.lineTo(origenX, 40);
+                ctx.stroke();
+
+                ctx.fillStyle = '#475569';
+                ctx.font = '11px system-ui';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+
+                const numTicks = 10;
+                for (let i = 0; i <= numTicks; i++) {
+                    const y = i * parametros.alturaMaxima / numTicks;
+                    const yPx = origenY - y * escalaY;
+
+                    if (i % 2 === 0) {
+                        ctx.fillText(y.toFixed(1), origenX - 10, yPx);
+                    }
+
+                    ctx.strokeStyle = '#64748b';
+                    ctx.beginPath();
+                    ctx.moveTo(origenX - 5, yPx);
+                    ctx.lineTo(origenX + 5, yPx);
+                    ctx.stroke();
+                }
+
+                ctx.save();
+                ctx.translate(20, height / 2);
+                ctx.rotate(-Math.PI / 2);
+                ctx.textAlign = 'center';
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 12px system-ui';
+                ctx.fillStyle = '#2d3748';
+                ctx.fillText('Altura y (m)', 0, 0);
+                ctx.restore();
+
+                ctx.strokeStyle = '#334155';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(origenX, origenY);
+                ctx.lineTo(width - 50, origenY);
+                ctx.stroke();
+
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = '#4a5568';
+                ctx.font = '11px system-ui';
+
+                for (let i = 0; i <= 5; i++) {
+                    const u = i * parametros.velocidad / 5;
+                    const xPx = origenX + u * escalaX;
+                    ctx.fillText(u.toFixed(1), xPx, origenY + 10);
+
+                    ctx.strokeStyle = '#475569';
+                    ctx.beginPath();
+                    ctx.moveTo(xPx, origenY - 3);
+                    ctx.lineTo(xPx, origenY + 3);
+                    ctx.stroke();
+                }
+
+                ctx.font = 'bold 12px system-ui';
+                ctx.fillStyle = '#2d3748';
+                ctx.fillText('Velocidad u (m/s)', origenX + parametros.velocidad * escalaX / 2, origenY + 40);
+
+                // Dibujar solución analítica (azul)
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+
+                let started = false;
+
+                // Si tiempo es 0, dibujar línea vertical en u=0 (estado inicial: fluido en reposo)
+                if (tiempo <= 0) {
+                    // Línea vertical en u=0 representando fluido en reposo
+                    ctx.moveTo(origenX, origenY);
+                    ctx.lineTo(origenX, origenY - parametros.alturaMaxima * escalaY);
+                    ctx.stroke();
+
+                    // Indicador de velocidad de la placa (flecha en la base)
+                    ctx.fillStyle = '#667eea';
+                    ctx.strokeStyle = '#667eea';
+                    ctx.lineWidth = 3;
+                    const flechaX = origenX + parametros.velocidad * escalaX * 0.5;
+
+                    // Flecha indicando dirección de movimiento de la placa
+                    ctx.beginPath();
+                    ctx.moveTo(origenX + 10, origenY - 15);
+                    ctx.lineTo(flechaX, origenY - 15);
+                    ctx.stroke();
+
+                    // Punta de flecha
+                    ctx.beginPath();
+                    ctx.moveTo(flechaX, origenY - 15);
+                    ctx.lineTo(flechaX - 10, origenY - 20);
+                    ctx.lineTo(flechaX - 10, origenY - 10);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Texto indicando velocidad de placa
+                    ctx.fillStyle = '#667eea';
+                    ctx.font = 'bold 11px system-ui';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`v = ${parametros.velocidad.toFixed(1)} m/s`, (origenX + flechaX) / 2, origenY - 28);
+
+                    // Texto estado inicial
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = '12px system-ui';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Estado inicial: fluido en reposo', width / 2, 30);
+                    ctx.fillText('Pulsa ▶ Play para iniciar la simulación', width / 2, 50);
+                } else {
+                    for (let y = 0; y <= parametros.alturaMaxima; y += 0.005) {
+                        const u_ana = solucionAnalitica(y, tiempo);
+                        const xPx = origenX + u_ana * escalaX;
+                        const yPx = origenY - y * escalaY;
+
+                        if (!started) {
+                            ctx.moveTo(xPx, yPx);
+                            started = true;
+                        } else {
+                            ctx.lineTo(xPx, yPx);
+                        }
+                    }
+                    ctx.stroke();
+                }
+
+                // Dibujar solución numérica (rojo) - solo si hay datos
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2.5;
+                ctx.setLineDash([8, 4]);
+                ctx.beginPath();
+
+                started = false;
+                for (let i = 0; i < u_num.length; i++) {
+                    const y = i * parametros.dy;
+                    const u = u_num[i];
+                    const xPx = origenX + u * escalaX;
+                    const yPx = origenY - y * escalaY;
+
+                    if (!started) {
+                        ctx.moveTo(xPx, yPx);
+                        started = true;
+                    } else {
+                        ctx.lineTo(xPx, yPx);
+                    }
+                }
+
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.strokeStyle = '#10b981';
+                ctx.fillStyle = '#10b981';
+                ctx.lineWidth = 2;
+
+                const skip = Math.max(1, Math.floor(u_num.length / 15));
+                for (let i = 0; i < u_num.length; i += skip) {
+                    const y = i * parametros.dy;
+                    const u = u_num[i];
+                    const yPx = origenY - y * escalaY;
+                    const len = u * escalaX * 0.7;
+
+                    if (Math.abs(len) > 3) {
+                        ctx.beginPath();
+                        ctx.moveTo(origenX, yPx);
+                        ctx.lineTo(origenX + len, yPx);
+                        ctx.stroke();
+
+                        const headLen = 8;
+                        ctx.beginPath();
+                        ctx.moveTo(origenX + len, yPx);
+                        ctx.lineTo(origenX + len - headLen, yPx - 4);
+                        ctx.lineTo(origenX + len - headLen, yPx + 4);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                }
+
+                valores.tiempo.textContent = `t = ${tiempo.toFixed(4)} s`;
+
+                const error = calcularErrorRMS();
+                errorDisplay.querySelector('.error-value').textContent = error.toFixed(6);
+
+                if (error < 0.01) {
+                    errorDisplay.classList.remove('high-error');
+                } else {
+                    errorDisplay.classList.add('high-error');
+                }
+
+                // Explicitly check stability
+                checkStability();
+            }
+
+            function actualizarInterfaz() {
+                valores.velocidad.textContent = `${parametros.velocidad.toFixed(1)} m/s`;
+                valores.viscosidad.textContent = `${parametros.viscosidad.toFixed(2)} m²/s`;
+                valores.dy.textContent = `${parametros.dy.toFixed(3)} m`;
+                valores.dt.textContent = `${parametros.dt.toFixed(4)} s`;
+                valores.altura.textContent = `${parametros.alturaMaxima.toFixed(1)} m`;
+
+                if (!reproduciendo) {
+                    dibujar();
+                }
+            }
+
+            sliders.velocidad.addEventListener('input', (e) => {
+                parametros.velocidad = parseFloat(e.target.value);
+                actualizarInterfaz();
+            });
+
+            sliders.viscosidad.addEventListener('input', (e) => {
+                parametros.viscosidad = parseFloat(e.target.value);
+                actualizarInterfaz();
+            });
+
+            sliders.dy.addEventListener('input', (e) => {
+                parametros.dy = parseFloat(e.target.value);
+                inicializar();
+                actualizarInterfaz();
+            });
+
+            sliders.dt.addEventListener('input', (e) => {
+                parametros.dt = parseFloat(e.target.value);
+                actualizarInterfaz();
+            });
+
+            sliders.altura.addEventListener('input', (e) => {
+                parametros.alturaMaxima = parseFloat(e.target.value);
+                inicializar();
+                actualizarInterfaz();
+            });
+
+            Object.entries(sliderButtons).forEach(([param, buttons]) => {
+                document.getElementById(buttons.down).addEventListener('click', () => {
+                    const slider = buttons.slider;
+                    const step = parseFloat(slider.step);
+                    const newValue = Math.max(parseFloat(slider.min), parseFloat(slider.value) - step);
+                    slider.value = newValue;
+                    slider.dispatchEvent(new Event('input'));
+                });
+
+                document.getElementById(buttons.up).addEventListener('click', () => {
+                    const slider = buttons.slider;
+                    const step = parseFloat(slider.step);
+                    const newValue = Math.min(parseFloat(slider.max), parseFloat(slider.value) + step);
+                    slider.value = newValue;
+                    slider.dispatchEvent(new Event('input'));
+                });
+            });
+
+            botones.play.addEventListener('click', () => {
+                reproduciendo = true;
+                botones.play.disabled = true;
+                botones.pause.disabled = false;
+                animar();
+            });
+
+            botones.pause.addEventListener('click', () => {
+                reproduciendo = false;
+                botones.play.disabled = false;
+                botones.pause.disabled = true;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+            });
+
+            botones.reset.addEventListener('click', () => {
+                reproduciendo = false;
+                botones.play.disabled = false;
+                botones.pause.disabled = true;
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                }
+                inicializar();
+                dibujar();
+            });
+
+            botones.step.addEventListener('click', () => {
+                actualizarNumerica();
+                dibujar();
+            });
+
+            function animar() {
+                if (!reproduciendo) return;
+
+                actualizarNumerica();
+                dibujar();
+
+                animationId = requestAnimationFrame(animar);
+            }
+
+            inicializar();
+            actualizarInterfaz();
+            dibujar();
+        </script>
+    </body>
+
+</html>
