@@ -892,7 +892,7 @@
                     const y = i * parametros.dy;
                     const u = u_num[i];
                     const yPx = origenY - y * escalaY;
-                    const len = u * escalaX * 0.7;
+                    const len = u * escalaX * 0.9;  // Aqui decido la longitud de los vectores de velocidad del perfil
 
                     if (Math.abs(len) > 3) {
                         ctx.beginPath();
@@ -1028,5 +1028,6 @@
             dibujar();
         </script>
     </body>
+
 
 </html>
