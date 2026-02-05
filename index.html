@@ -258,6 +258,106 @@
             }
         }
 
+        /* Estilos específicos para la tarjeta de Placa Oscilante */
+        .oscillating-plate {
+            cursor: default;
+        }
+
+        .oscillating-plate:hover {
+            transform: none;
+        }
+
+        .oscillating-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .oscillating-left {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .oscillating-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon-wave {
+            font-size: 1.8em;
+        }
+
+        .oscillating-header h3 {
+            color: #2d3748;
+            font-size: 1.5em;
+        }
+
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .nav-btn:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .oscillating-description {
+            color: #4a5568;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+
+        .oscillating-right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e2e8f0;
+            min-height: 200px;
+        }
+
+        .equation-box {
+            text-align: center;
+        }
+
+        .equation-main {
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .equation-params {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #4a5568;
+        }
+
         @media (max-width: 768px) {
             .simulations-grid {
                 grid-template-columns: 1fr;
@@ -269,6 +369,23 @@
 
             .subtitle {
                 font-size: 1em;
+            }
+
+            .oscillating-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .oscillating-right {
+                min-height: 150px;
+            }
+
+            .equation-main {
+                font-size: 1.1em;
+            }
+
+            .equation-params {
+                font-size: 0.95em;
             }
         }
 
@@ -370,29 +487,34 @@
             </div>
 
             <!-- Simulación 2: Placa oscilante -->
-            <div class="simulation-card" onclick="window.location.href='placa-oscilante.html'">
-                <h3>
-                    <span class="icon">〰️</span> Placa Oscilante
-                <h3>
-                <div class="features">
-                    <span class="feature-tag">Segundo Problema de Stokes</span>
-                    <span class="feature-tag">React + Tailwind</span>
-                    <span class="feature-tag">Onda de Corte</span>
+            <div class="simulation-card oscillating-plate">
+                <div class="oscillating-content">
+                    <div class="oscillating-left">
+                        <div class="oscillating-header">
+                            <span class="icon-wave">〰️</span>
+                            <h3 style="margin: 0;">Placa Oscilante</h3>
+                        </div>
+                        <div class="nav-buttons">
+                            <button class="nav-btn active" onclick="event.stopPropagation()">Segundo Problema de Stokes</button>
+                            <button class="nav-btn" onclick="event.stopPropagation(); window.location.href='placa-oscilante.html'">React + Tailwind</button>
+                            <button class="nav-btn" onclick="event.stopPropagation()">Onda de Corte</button>
+                        </div>
+                        <p class="oscillating-description">
+                            Una placa oscila con movimiento armónico. <strong>El fluido responde con una onda que se atenúa exponencialmente con la altura y presenta un desfase espacial.</strong>
+                        </p>
+                        <a href="placa-oscilante.html" class="btn btn-secondary" style="margin-top: 20px;" onclick="event.stopPropagation()">Ver Simulación →</a>
+                    </div>
+                    <div class="oscillating-right">
+                        <div class="equation-box">
+                            <div class="equation-main">
+                                u(y,t) = v₀·e⁻ᵏʸ·cos(ωt - ky)
+                            </div>
+                            <div class="equation-params">
+                                k = √(ω/(2ν)), δ = √(2ν/ω)
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p>
-                    Una placa oscila con movimiento armónico. El fluido responde con una onda
-                    que se atenúa exponencialmente con la altura y presenta un desfase espacial.
-                </p>
-                <div class="equation">
-                    u(y,t) = v₀·e⁻ᵏʸ·cos(ωt - ky)<br>
-                    k = √(ω/(2ν)), δ = √(2ν/ω)
-                </div>
-                <p style="font-size: 0.9em; color: #718096;">
-                    <strong>Características:</strong> Profundidad de penetración, número de onda,
-                    atenuación exponencial.
-                </p>
-                <a href="placa-oscilante.html" class="btn btn-secondary" onclick="event.stopPropagation()">Ver
-                    Simulación →</a>
             </div>
         </div>
 
@@ -565,5 +687,3 @@
 </body>
 
 </html>
-
-
